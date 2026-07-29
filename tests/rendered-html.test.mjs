@@ -22,7 +22,7 @@ test("server-renders The Safe Garden experience", async () => {
   const html = await response.text();
   assert.match(html, /<title>The Safe Garden — Practice brave words together<\/title>/i);
   assert.match(html, /The Safe Garden/);
-  assert.match(html, /Little Fox will visit the park and practice telling a friend/);
+  assert.match(html, /Little Fox will practice what to do when a friend comes too close/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
