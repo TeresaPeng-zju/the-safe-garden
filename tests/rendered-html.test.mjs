@@ -29,17 +29,17 @@ test("server-renders The Safe Garden experience", async () => {
 test("ships optimized game assets and social metadata", async () => {
   const requiredAssets = [
     "../public/assets/park-background.png",
-    "../public/assets/fox.glb",
-    "../public/assets/dog.glb",
+    "../public/assets/fox-2d.png",
+    "../public/assets/dog-2d.png",
     "../public/assets/garden-music.mp3",
     "../public/og.png",
   ];
 
   await Promise.all(requiredAssets.map((path) => access(new URL(path, import.meta.url))));
   const [fox, dog] = await Promise.all([
-    stat(new URL("../public/assets/fox.glb", import.meta.url)),
-    stat(new URL("../public/assets/dog.glb", import.meta.url)),
+    stat(new URL("../public/assets/fox-2d.png", import.meta.url)),
+    stat(new URL("../public/assets/dog-2d.png", import.meta.url)),
   ]);
-  assert.ok(fox.size < 10_000_000, "fox.glb should remain web-sized");
-  assert.ok(dog.size < 10_000_000, "dog.glb should remain web-sized");
+  assert.ok(fox.size < 5_000_000, "fox sprite sheet should remain web-sized");
+  assert.ok(dog.size < 5_000_000, "dog sprite sheet should remain web-sized");
 });

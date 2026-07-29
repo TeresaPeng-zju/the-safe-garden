@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { useEffect, useRef, useState } from "react";
 
 type Language = "en" | "zh";
 type JourneyStep = "welcome" | "choice" | "response" | "safety" | "complete";
@@ -113,135 +111,34 @@ const copy = {
   },
 } as const;
 
-function ModelStage({ step, reducedMotion, onReady }: { step: JourneyStep; reducedMotion: boolean; onReady: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const stepRef = useRef(step);
-  const reducedRef = useRef(reducedMotion);
+function IllustratedCharacters({ step, choice }: { step: JourneyStep; choice: BoundaryChoice }) {
+  const foxPose = step === "complete"
+    ? "fox-celebrate"
+    : step === "safety"
+      ? "fox-step"
+      : step === "response" && choice === "yes"
+        ? "fox-happy"
+        : "fox-idle";
+  const dogPose = step === "complete" || (step === "response" && choice === "yes")
+    ? "dog-happy"
+    : step === "response" && choice === "space"
+      ? "dog-step"
+      : step === "safety"
+        ? "dog-listen"
+        : "dog-idle";
 
-  useEffect(() => {
-    stepRef.current = step;
-  }, [step]);
-
-  useEffect(() => {
-    reducedRef.current = reducedMotion;
-  }, [reducedMotion]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-4.5, 4.5, 2.8, -2.8, 0.1, 100);
-    camera.position.set(0, 0.2, 10);
-
-    scene.add(new THREE.HemisphereLight(0xfff5da, 0x66845c, 2.7));
-    const sunlight = new THREE.DirectionalLight(0xffefd0, 3.2);
-    sunlight.position.set(-3, 7, 8);
-    scene.add(sunlight);
-
-    const foxRoot = new THREE.Group();
-    const dogRoot = new THREE.Group();
-    foxRoot.position.set(-1.65, -2.2, 0.5);
-    dogRoot.position.set(0.75, -1.45, 0);
-    scene.add(foxRoot, dogRoot);
-
-    const loader = new GLTFLoader();
-    let disposed = false;
-
-    const addModel = async (url: string, root: THREE.Group, targetHeight: number, facing: number) => {
-      const gltf = await loader.loadAsync(url);
-      if (disposed) return;
-      const model = gltf.scene;
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const scale = targetHeight / Math.max(size.y, 0.001);
-      model.scale.setScalar(scale);
-      model.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
-      model.rotation.y = facing;
-      model.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.castShadow = false;
-          object.receiveShadow = false;
-          const material = object.material as THREE.MeshStandardMaterial;
-          if (material) {
-            material.roughness = Math.max(material.roughness ?? 0.8, 0.72);
-            material.metalness = 0;
-          }
-        }
-      });
-      root.add(model);
-    };
-
-    Promise.all([
-      addModel("/assets/fox.glb", foxRoot, 1.95, -0.22),
-      addModel("/assets/dog.glb", dogRoot, 1.55, 0.15),
-    ]).then(() => {
-      if (!disposed) onReady();
-    }).catch(() => {
-      if (!disposed) onReady();
-    });
-
-    const resize = () => {
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      const width = parent.clientWidth;
-      const height = parent.clientHeight;
-      renderer.setSize(width, height, false);
-      const aspect = width / Math.max(height, 1);
-      const viewHeight = 5.6;
-      camera.left = -(viewHeight * aspect) / 2;
-      camera.right = (viewHeight * aspect) / 2;
-      camera.top = viewHeight / 2;
-      camera.bottom = -viewHeight / 2;
-      camera.updateProjectionMatrix();
-    };
-
-    const observer = new ResizeObserver(resize);
-    if (canvas.parentElement) observer.observe(canvas.parentElement);
-    resize();
-
-    const clock = new THREE.Clock();
-    let animationId = 0;
-    const animate = () => {
-      const elapsed = clock.getElapsedTime();
-      const calm = reducedRef.current;
-      const currentStep = stepRef.current;
-      const foxTargetX = currentStep === "safety" ? -1.95 : -1.65;
-      const dogTargetX = currentStep === "response" ? 1.15 : 0.75;
-      foxRoot.position.x += (foxTargetX - foxRoot.position.x) * 0.055;
-      dogRoot.position.x += (dogTargetX - dogRoot.position.x) * 0.055;
-      if (!calm) {
-        foxRoot.position.y = -2.2 + Math.sin(elapsed * 2.1) * 0.035;
-        dogRoot.position.y = -1.45 + Math.sin(elapsed * 1.8 + 1.2) * 0.028;
-      }
-      renderer.render(scene, camera);
-      animationId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    return () => {
-      disposed = true;
-      observer.disconnect();
-      cancelAnimationFrame(animationId);
-      renderer.dispose();
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          const material = object.material as THREE.Material;
-          material?.dispose();
-        }
-      });
-    };
-  }, [onReady]);
-
-  return <canvas ref={canvasRef} className="model-canvas" aria-hidden="true" />;
+  return (
+    <div className="storybook-characters" aria-hidden="true">
+      <div className={`storybook-character fox-character ${step === "safety" ? "is-stepping" : ""}`}>
+        <span className="character-shadow" />
+        <span className={`sprite-window fox-sprite ${foxPose}`}><img src="/assets/fox-2d.png" alt="" /></span>
+      </div>
+      <div className={`storybook-character dog-character ${step === "response" && choice === "space" ? "is-stepping" : ""}`}>
+        <span className="character-shadow" />
+        <span className={`sprite-window dog-sprite ${dogPose}`}><img src="/assets/dog-2d.png" alt="" /></span>
+      </div>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -250,7 +147,6 @@ export default function Home() {
   const [choice, setChoice] = useState<BoundaryChoice>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [musicOn, setMusicOn] = useState(true);
-  const [modelsReady, setModelsReady] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const t = copy[language];
 
@@ -275,8 +171,6 @@ export default function Home() {
   useEffect(() => {
     window.localStorage.setItem("safe-garden-language", language);
   }, [language]);
-
-  const handleReady = useCallback(() => setModelsReady(true), []);
 
   const startJourney = async () => {
     setStep("choice");
@@ -317,11 +211,7 @@ export default function Home() {
       <section className="story-stage" aria-label={t.todaysWalk}>
         <div className="park-background" />
         <div className="paper-haze" />
-        <ModelStage step={step} reducedMotion={reducedMotion} onReady={handleReady} />
-        <div className="fox-shadow" aria-hidden="true" />
-        <div className="dog-shadow" aria-hidden="true" />
-
-        {!modelsReady && <div className="loading-pill"><span className="loading-seed">●</span>{t.loading}</div>}
+        <IllustratedCharacters step={step} choice={choice} />
 
         <header className="stage-header">
           <div className="today-card">

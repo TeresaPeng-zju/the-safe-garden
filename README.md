@@ -6,7 +6,7 @@ A gentle parent-and-child practice game for body boundaries, communication, and 
 
 - English and Chinese content
 - Responsive child journey and parent coaching panel
-- Two optimized GLB characters over a storybook park
+- Illustrated 2D character poses with calm, low-stimulation motion over a storybook park
 - Consent and safety practice with non-punitive feedback
 - Calm mode, reduced motion, and optional background music
 - Device-local preferences
@@ -29,7 +29,7 @@ Open `http://localhost:3000`.
 npm test
 ```
 
-The original source assets remain under `assets/`. Web-ready copies live under `public/assets/`; the source GLB files are preserved unchanged and are not served directly.
+The original source assets remain under `assets/`. Web-ready copies live under `public/assets/`; the experimental source GLB files are preserved locally but are no longer served or loaded by the game.
 
 ## Product safety boundary
 
