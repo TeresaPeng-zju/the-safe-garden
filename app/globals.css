@@ -377,13 +377,50 @@ button { color: inherit; }
 .card-title h2 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 18px; }
 .coach-card p { margin: 6px 0; color: #6f5c47; font-size: 13px; line-height: 1.55; }
 .gentle-success { display: block; margin-bottom: 8px; color: #70894f; font-size: 13px; }
-.mini-flower { position: absolute; right: 14px; bottom: 8px; font-size: 35px; opacity: .32; transform-origin: bottom; }
-.mini-flower.bloomed { opacity: 1; animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); }
+.mini-growth {
+  position: absolute;
+  right: 9px;
+  bottom: 6px;
+  width: 62px;
+  height: 62px;
+  opacity: .5;
+  transform-origin: bottom;
+  background-image: url("/assets/growth.png");
+  background-repeat: no-repeat;
+  background-size: 400% auto;
+  background-position-y: 49%;
+}
+.mini-growth.bloomed { opacity: 1; animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); }
 .observation-card p { padding-right: 34px; }
 .tonight-card blockquote { margin: 12px 0; padding: 15px; border: 0; border-radius: 17px; background: linear-gradient(135deg, #fff0c8, #f7dfaa); color: #60492f; font-family: Georgia, "Songti SC", serif; font-size: 14px; line-height: 1.45; }
 .coach-card .parent-reply { color: #7a6b57; font-size: 12px; }
-.garden-bed { height: 75px; margin-top: 11px; padding: 16px 12px 8px; display: flex; align-items: flex-end; justify-content: space-around; border-radius: 18px; background: linear-gradient(180deg, #e9edcd 0 58%, #b98b56 59% 72%, #916640 73%); }
-.garden-bed span { font-size: 25px; filter: saturate(.78); transform-origin: bottom; }
+.garden-bed { height: 92px; margin-top: 11px; padding: 4px 8px 7px; display: flex; align-items: flex-end; justify-content: space-around; border-radius: 18px; background: linear-gradient(180deg, #e9edcd 0 62%, #b98b56 63% 75%, #916640 76%); overflow: hidden; }
+.growth-stage {
+  width: 25%;
+  height: 76px;
+  display: block;
+  flex: 0 0 25%;
+  background-image: url("/assets/growth.png");
+  background-repeat: no-repeat;
+  background-size: 400% auto;
+  background-position-y: 49%;
+  filter: saturate(.88);
+  transform-origin: bottom;
+}
+.stage-seed { background-position-x: 0%; }
+.stage-sprout { background-position-x: 33.333%; }
+.stage-leaf { background-position-x: 66.666%; }
+.stage-flower { background-position-x: 100%; }
+.title-growth {
+  width: 27px;
+  height: 27px;
+  display: inline-block;
+  flex: 0 0 27px;
+  background-image: url("/assets/growth.png");
+  background-repeat: no-repeat;
+  background-size: 400% auto;
+  background-position-y: 49%;
+}
 .garden-bed .flower-grown { animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); filter: none; }
 .panel-disclaimer { margin: 0; text-align: center; color: #a28d73; font-size: 10px; }
 

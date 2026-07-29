@@ -432,7 +432,7 @@ export default function Home() {
             {step === "complete" ? (
               <><strong className="gentle-success">{language === "en" ? "A gentle practice completed" : "完成了一次温柔的练习"}</strong><p>{choice === "space" ? t.observedSpace : choice === "yes" ? t.observedYes : t.observedNeutral}</p></>
             ) : <p>{t.parentWaiting}</p>}
-            <div className={`mini-flower ${step === "complete" ? "bloomed" : ""}`} aria-hidden="true">{step === "complete" ? "🌸" : "🌱"}</div>
+            <div className={`mini-growth ${step === "complete" ? "stage-flower bloomed" : "stage-sprout"}`} aria-hidden="true" />
           </section>
 
           <section className="coach-card tonight-card">
@@ -443,10 +443,12 @@ export default function Home() {
           </section>
 
           <section className="coach-card garden-card">
-            <div className="card-title"><span aria-hidden="true">🌳</span><h2>{t.ourGarden}</h2></div>
+            <div className="card-title"><span className="title-growth stage-leaf" aria-hidden="true" /><h2>{t.ourGarden}</h2></div>
             <p>{t.keepGrowing}</p>
             <div className="garden-bed" aria-label="Garden growth progress">
-              {[0, 1, 2, 3].map((index) => <span key={index} className={step === "complete" && index === 3 ? "flower-grown" : ""}>{index === 3 && step === "complete" ? "🌸" : index < 2 ? "🌱" : "🌿"}</span>)}
+              {["stage-seed", "stage-sprout", "stage-leaf", "stage-flower"].map((stageClass, index) => (
+                <span key={stageClass} className={`growth-stage ${stageClass} ${step === "complete" && index === 3 ? "flower-grown" : ""}`} />
+              ))}
             </div>
           </section>
 
