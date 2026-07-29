@@ -1,6 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  ArrowDownLeft,
+  ArrowRight,
+  Check,
+  Flower2,
+  Hand,
+  Heart,
+  Home as HomeIcon,
+  Lightbulb,
+  Map,
+  Music2,
+  NotebookText,
+  RotateCcw,
+  Settings,
+  ShieldCheck,
+  Trees,
+  UserRoundCheck,
+  VolumeX,
+} from "lucide-react";
 
 type Language = "en" | "zh";
 type JourneyStep = "welcome" | "choice" | "response" | "safety" | "complete";
@@ -203,6 +222,12 @@ export default function Home() {
   };
 
   const progressIndex = step === "welcome" ? 0 : step === "choice" ? 1 : step === "response" || step === "safety" ? 2 : 3;
+  const progressItems = [
+    { icon: <HomeIcon />, label: t.progressHome },
+    { icon: <Trees />, label: t.progressPark },
+    { icon: <ShieldCheck />, label: t.progressPractice },
+    { icon: <span className="growth-icon stage-sprout" />, label: t.progressGarden },
+  ];
 
   return (
     <main className={`app-shell ${reducedMotion ? "reduced-motion" : ""}`}>
@@ -215,17 +240,17 @@ export default function Home() {
 
         <header className="stage-header">
           <div className="today-card">
-            <span className="flower-mark" aria-hidden="true">✿</span>
+            <span className="flower-mark" aria-hidden="true"><Flower2 /></span>
             <div><strong>{t.todaysWalk}</strong><span>{t.park}</span></div>
           </div>
           <button className="garden-shortcut" type="button" onClick={() => setStep("complete")} aria-label={t.ourGarden}>
-            <span aria-hidden="true">🌱</span><small>{t.ourGarden}</small>
+            <span className="growth-icon stage-sprout" aria-hidden="true" /><small>{t.ourGarden}</small>
           </button>
         </header>
 
         <div className="stage-tools">
           <button type="button" onClick={toggleMusic} aria-label={musicOn ? t.musicOn : t.musicOff} title={musicOn ? t.musicOn : t.musicOff}>
-            {musicOn ? "♫" : "♩̸"}
+            {musicOn ? <Music2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
           </button>
           <button type="button" onClick={() => setLanguage(language === "en" ? "zh" : "en")} aria-label="Change language">
             {t.language}
@@ -235,7 +260,7 @@ export default function Home() {
         {step === "welcome" && (
           <div className="welcome-overlay" role="dialog" aria-labelledby="welcome-title">
             <div className="welcome-card">
-              <span className="welcome-sprout" aria-hidden="true">🌱</span>
+              <span className="welcome-sprout" aria-hidden="true"><span className="growth-icon stage-sprout" /></span>
               <p className="eyebrow">{t.brand}</p>
               <h1 id="welcome-title">{t.welcomeTitle}</h1>
               <p className="welcome-copy">{t.welcomeBody}</p>
@@ -251,7 +276,7 @@ export default function Home() {
                   <span className="switch" aria-hidden="true" />
                 </label>
               </div>
-              <button className="primary-button" type="button" onClick={startJourney}>{t.start}<span aria-hidden="true">→</span></button>
+              <button className="primary-button" type="button" onClick={startJourney}>{t.start}<ArrowRight aria-hidden="true" /></button>
               <p className="safety-note">{t.safeNote}</p>
             </div>
           </div>
@@ -261,25 +286,25 @@ export default function Home() {
           <div className="dialogue dialogue-choice" role="group" aria-label={t.dogAsk}>
             <div className="speech-bubble dog-bubble"><span className="speaker-dot dog-avatar" aria-hidden="true" />{t.dogAsk}</div>
             <div className="choice-stack">
-              <button type="button" onClick={() => chooseBoundary("yes")}><span className="choice-icon heart" aria-hidden="true">♥</span>{t.yes}</button>
-              <button type="button" onClick={() => chooseBoundary("space")}><span className="choice-icon hand" aria-hidden="true">✋</span>{t.space}</button>
+              <button type="button" onClick={() => chooseBoundary("yes")}><span className="choice-icon heart" aria-hidden="true"><Heart /></span>{t.yes}</button>
+              <button type="button" onClick={() => chooseBoundary("space")}><span className="choice-icon hand" aria-hidden="true"><Hand /></span>{t.space}</button>
             </div>
           </div>
         )}
 
         {step === "response" && (
           <div className="dialogue response-dialogue" aria-live="polite">
-            <div className="speech-bubble dog-bubble positive"><span aria-hidden="true">✓</span>{choice === "space" ? t.noResponse : t.yesResponse}</div>
-            <button className="primary-button compact" type="button" onClick={() => setStep("safety")}>{t.continue}<span aria-hidden="true">→</span></button>
+            <div className="speech-bubble dog-bubble positive"><span aria-hidden="true"><Check /></span>{choice === "space" ? t.noResponse : t.yesResponse}</div>
+            <button className="primary-button compact" type="button" onClick={() => setStep("safety")}>{t.continue}<ArrowRight aria-hidden="true" /></button>
           </div>
         )}
 
         {step === "safety" && (
           <div className="dialogue safety-dialogue" role="group" aria-label={t.safetyAsk}>
-            <div className="speech-bubble coach-bubble"><span aria-hidden="true">💡</span>{t.safetyAsk}</div>
+            <div className="speech-bubble coach-bubble"><span aria-hidden="true"><Lightbulb /></span>{t.safetyAsk}</div>
             <div className="choice-stack safety-choices">
-              <button type="button" onClick={() => setStep("complete")}><span className="choice-icon" aria-hidden="true">↙</span>{t.stepBack}</button>
-              <button type="button" onClick={() => setStep("complete")}><span className="choice-icon" aria-hidden="true">⌂</span>{t.tellAdult}</button>
+              <button type="button" onClick={() => setStep("complete")}><span className="choice-icon" aria-hidden="true"><ArrowDownLeft /></span>{t.stepBack}</button>
+              <button type="button" onClick={() => setStep("complete")}><span className="choice-icon" aria-hidden="true"><UserRoundCheck /></span>{t.tellAdult}</button>
             </div>
           </div>
         )}
@@ -292,7 +317,7 @@ export default function Home() {
               <h2 id="garden-title">{t.gardenTitle}</h2>
               <p>{t.gardenBody}</p>
               <div className="completion-actions">
-                <button className="primary-button" type="button" onClick={restart}>{t.replay}<span aria-hidden="true">↻</span></button>
+                <button className="primary-button" type="button" onClick={restart}>{t.replay}<RotateCcw aria-hidden="true" /></button>
               </div>
             </div>
           </div>
@@ -300,7 +325,7 @@ export default function Home() {
 
         <nav className="journey-progress" aria-label="Journey progress">
           <div className="progress-intro"><span>{language === "en" ? "Today’s" : "今天的"}</span><strong>{t.journey}</strong></div>
-          {[{ icon: "⌂", label: t.progressHome }, { icon: "♣", label: t.progressPark }, { icon: "●", label: t.progressPractice }, { icon: "🌱", label: t.progressGarden }].map((item, index) => (
+          {progressItems.map((item, index) => (
             <div className={`progress-step ${index <= progressIndex ? "active" : ""}`} key={item.label}>
               <span className="progress-icon" aria-hidden="true">{item.icon}</span>
               <small>{item.label}</small>
@@ -311,14 +336,14 @@ export default function Home() {
 
       <aside className={`parent-panel ${step === "complete" ? "mobile-visible" : ""}`} aria-label={t.forParents}>
         <header className="profile-header">
-          <div className="profile-avatar"><div className="fox-avatar-crop"><img src="/assets/fox-2d.png" alt="" /></div></div>
+          <div className="profile-avatar"><img className="profile-avatar-image" src="/assets/fox-avatar.png" alt="" /></div>
           <div><strong>Little Fox</strong><span>{language === "en" ? "Today’s practice" : "今天的练习"}</span></div>
-          <button type="button" aria-label={t.settings} onClick={() => setReducedMotion(!reducedMotion)}>⚙</button>
+          <button type="button" aria-label={t.settings} onClick={() => setReducedMotion(!reducedMotion)}><Settings aria-hidden="true" /></button>
         </header>
 
         <div className="panel-scroll">
           <section className="coach-card observation-card">
-            <div className="card-title"><span aria-hidden="true">🌱</span><h2>{step === "complete" ? t.observedTitle : t.forParents}</h2></div>
+            <div className="card-title"><span className="title-growth stage-sprout" aria-hidden="true" /><h2>{step === "complete" ? t.observedTitle : t.forParents}</h2></div>
             {step === "complete" ? (
               <><strong className="gentle-success">{language === "en" ? "A gentle practice completed" : "完成了一次温柔的练习"}</strong><p>{choice === "space" ? t.observedSpace : choice === "yes" ? t.observedYes : t.observedNeutral}</p></>
             ) : <p>{t.parentWaiting}</p>}
@@ -326,7 +351,7 @@ export default function Home() {
           </section>
 
           <section className="coach-card tonight-card">
-            <div className="card-title"><span aria-hidden="true">💡</span><h2>{t.tonight}</h2></div>
+            <div className="card-title"><Lightbulb aria-hidden="true" /><h2>{t.tonight}</h2></div>
             <p>{language === "en" ? "At a calm moment, you can ask:" : "在轻松的时候，可以问："}</p>
             <blockquote>{t.tonightPrompt}</blockquote>
             <p className="parent-reply">{t.parentReply}</p>
@@ -346,10 +371,10 @@ export default function Home() {
         </div>
 
         <nav className="panel-nav" aria-label="Parent navigation">
-          <button className="active" type="button"><span aria-hidden="true">⌂</span>{t.home}</button>
-          <button type="button"><span aria-hidden="true">☘</span>{t.journey}</button>
-          <button type="button"><span aria-hidden="true">✿</span>{t.garden}</button>
-          <button type="button"><span aria-hidden="true">▤</span>{t.notes}</button>
+          <button className="active" type="button"><HomeIcon aria-hidden="true" />{t.home}</button>
+          <button type="button"><Map aria-hidden="true" />{t.journey}</button>
+          <button type="button"><Flower2 aria-hidden="true" />{t.garden}</button>
+          <button type="button"><NotebookText aria-hidden="true" />{t.notes}</button>
         </nav>
       </aside>
     </main>

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, stat } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
 async function render() {
@@ -31,6 +31,9 @@ test("ships optimized game assets and social metadata", async () => {
     "../public/assets/park-background.png",
     "../public/assets/fox-2d.png",
     "../public/assets/dog-2d.png",
+    "../public/assets/fox-avatar.png",
+    "../public/assets/dog-avatar.png",
+    "../public/assets/growth.png",
     "../public/assets/garden-music.mp3",
     "../public/og.png",
   ];
@@ -42,4 +45,15 @@ test("ships optimized game assets and social metadata", async () => {
   ]);
   assert.ok(fox.size < 5_000_000, "fox sprite sheet should remain web-sized");
   assert.ok(dog.size < 5_000_000, "dog sprite sheet should remain web-sized");
+});
+
+test("uses artwork and icon components instead of emoji UI", async () => {
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.doesNotMatch(`${pageSource}\n${styles}`, /[🌱💡✋⚙✿♫]/u);
+  assert.match(pageSource, /fox-avatar\.png/);
+  assert.match(styles, /dog-avatar\.png/);
+  assert.match(pageSource, /growth-icon/);
 });
