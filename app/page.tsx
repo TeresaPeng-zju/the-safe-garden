@@ -137,11 +137,17 @@ function ActionIcon({ action }: { action?: SemanticAction }) {
 }
 
 function IllustratedCharacters({ node }: { node: JourneyNode }) {
-  const presentation = node.action ? semanticPresentationMap[node.action] : undefined;
+  const presentation = node.id === "respect-space"
+    ? "dog-boundary-step-back"
+    : node.action
+      ? semanticPresentationMap[node.action]
+      : undefined;
   const foxPose = presentation === "fox-happy" ? "fox-happy" : presentation === "fox-step" ? "fox-step" : presentation === "fox-seek-help" ? "fox-happy" : "fox-idle";
-  const dogPose = presentation === "dog-step-back" ? "dog-step" : presentation === "dog-listen" ? "dog-listen" : "dog-idle";
+  const dogPose = presentation === "dog-listen" ? "dog-listen" : "dog-idle";
+  const usesDogActionSheet = presentation === "dog-boundary-step-back" || presentation === "dog-repair";
+  const dogActionPose = presentation === "dog-boundary-step-back" ? "dog-action-back" : "dog-repair";
   const foxClass = presentation === "fox-step" ? "is-stepping" : presentation === "fox-leave" || presentation === "fox-seek-help" ? "is-leaving" : "";
-  const dogClass = presentation === "dog-approach" ? "is-approaching" : presentation === "dog-step-back" ? "is-stepping" : "";
+  const dogClass = presentation === "dog-approach" ? "is-approaching" : "";
 
   return (
     <div className="storybook-characters" aria-hidden="true">
@@ -151,7 +157,11 @@ function IllustratedCharacters({ node }: { node: JourneyNode }) {
       </div>
       <div className={`storybook-character dog-character ${dogClass}`}>
         <span className="character-shadow" />
-        <span className={`sprite-window dog-sprite ${dogPose}`}><img src="/assets/dog-2d.png" alt="" /></span>
+        {usesDogActionSheet ? (
+          <span className={`sprite-window dog-action-sprite ${dogActionPose}`}><img src="/assets/dog-actions.png" alt="" /></span>
+        ) : (
+          <span className={`sprite-window dog-sprite ${dogPose}`}><img src="/assets/dog-2d.png" alt="" /></span>
+        )}
       </div>
     </div>
   );

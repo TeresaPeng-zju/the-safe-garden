@@ -376,5 +376,5 @@ export const semanticPresentationMap: Partial<Record<SemanticAction, string>> = 
   "continue-after-boundary": "dog-approach",
   "leave": "fox-leave",
   "seek-help": "fox-seek-help",
-  "repair": "dog-step-back",
+  "repair": "dog-repair",
 };

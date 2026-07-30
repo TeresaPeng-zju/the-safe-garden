@@ -33,6 +33,7 @@ test("ships optimized game assets and social metadata", async () => {
     "../public/assets/dog-2d.png",
     "../public/assets/fox-avatar.png",
     "../public/assets/dog-avatar.png",
+    "../public/assets/dog-actions.png",
     "../public/assets/growth.png",
     "../public/assets/garden-music.mp3",
     "../public/og.png",

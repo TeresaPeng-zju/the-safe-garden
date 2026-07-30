@@ -124,6 +124,12 @@ button { color: inherit; }
 .dog-happy img { left: -100%; }
 .dog-step img { left: -200%; }
 .dog-listen img { left: 0; }
+.dog-action-sprite { animation: none; }
+.dog-action-sprite img { top: -50%; }
+.dog-action-stop img { left: 0; }
+.dog-action-back img { left: -100%; }
+.dog-action-apologize img { left: -200%; }
+.dog-repair img { left: 0; animation: dogRepairFrames 3.6s step-end forwards; }
 .is-stepping .sprite-window { animation: characterStep .72s ease-out both; }
 .is-stepping .character-shadow { transform: translateX(8px) scaleX(.88); opacity: .75; }
 
@@ -494,6 +500,11 @@ button { color: inherit; }
 @keyframes flowerPop { 0% { transform: scale(.35); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes characterBreathe { 0%, 100% { transform: translateY(0) rotate(-.4deg); } 50% { transform: translateY(-5px) rotate(.4deg); } }
 @keyframes characterStep { 0% { transform: translateY(0) rotate(0); } 45% { transform: translateY(-8px) rotate(-2deg); } 100% { transform: translateY(0) rotate(0); } }
+@keyframes dogRepairFrames {
+  0%, 30% { left: 0; }
+  31%, 64% { left: -100%; }
+  65%, 100% { left: -200%; }
+}
 
 @media (max-width: 1050px) {
   .app-shell { grid-template-columns: minmax(0, 1fr) 330px; }
