@@ -136,7 +136,7 @@ function ActionIcon({ action }: { action?: SemanticAction }) {
   return <ArrowRight />;
 }
 
-function IllustratedCharacters({ node }: { node: JourneyNode }) {
+function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; reducedMotion: boolean }) {
   const presentation = node.id === "respect-space"
     ? "dog-boundary-step-back"
     : node.action
@@ -145,9 +145,12 @@ function IllustratedCharacters({ node }: { node: JourneyNode }) {
   const foxPose = presentation === "fox-happy" ? "fox-happy" : presentation === "fox-step" ? "fox-step" : presentation === "fox-seek-help" ? "fox-happy" : "fox-idle";
   const dogPose = presentation === "dog-listen" ? "dog-listen" : "dog-idle";
   const usesDogActionSheet = presentation === "dog-boundary-step-back" || presentation === "dog-repair";
+  const usesBubbleIdle = node.id === "ask-consent";
   const dogActionPose = presentation === "dog-boundary-step-back" ? "dog-action-back" : "dog-repair";
   const foxClass = presentation === "fox-step" ? "is-stepping" : presentation === "fox-leave" || presentation === "fox-seek-help" ? "is-leaving" : "";
   const dogClass = presentation === "dog-approach" ? "is-approaching" : "";
+  const showTrustedAdult = ["seek-help", "repair", "trusted-adult-response"].includes(node.id);
+  const parentPose = node.id === "repair" ? "parent-protect" : node.id === "trusted-adult-response" ? "parent-reassure" : "parent-listen";
 
   return (
     <div className="storybook-characters" aria-hidden="true">
@@ -159,17 +162,25 @@ function IllustratedCharacters({ node }: { node: JourneyNode }) {
         <span className="character-shadow" />
         {usesDogActionSheet ? (
           <span className={`sprite-window dog-action-sprite ${dogActionPose}`}><img src="/assets/dog-actions.png" alt="" /></span>
+        ) : usesBubbleIdle ? (
+          <span className="sprite-window dog-bubble-sprite"><img src={reducedMotion ? "/assets/dog-bubble-still.png" : "/assets/dog-bubble.webp"} alt="" /></span>
         ) : (
           <span className={`sprite-window dog-sprite ${dogPose}`}><img src="/assets/dog-2d.png" alt="" /></span>
         )}
       </div>
+      {showTrustedAdult && (
+        <div className={`storybook-character parent-character ${node.id === "seek-help" ? "is-arriving" : ""}`}>
+          <span className="character-shadow" />
+          <span className={`sprite-window parent-sprite ${parentPose}`}><img src="/assets/fox-parent.png" alt="" /></span>
+        </div>
+      )}
     </div>
   );
 }
 
 function Speaker({ node, language }: { node: JourneyNode; language: Language }) {
   if (node.actor === "trusted-adult") {
-    return <span className="speaker-dot trusted-adult-avatar" aria-hidden="true"><ShieldCheck /></span>;
+    return <span className="speaker-dot trusted-adult-avatar" aria-hidden="true" />;
   }
   if (node.actor === "player") {
     return <span className="speaker-dot fox-dialogue-avatar" aria-hidden="true" />;
@@ -324,7 +335,7 @@ export default function Home() {
       <section className="story-stage" aria-label={t.todaysWalk}>
         <div className="park-background" />
         <div className="paper-haze" />
-        <IllustratedCharacters node={node} />
+        <IllustratedCharacters node={node} reducedMotion={reducedMotion} />
 
         <header className="stage-header">
           <div className="today-card">

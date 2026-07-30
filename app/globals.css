@@ -84,10 +84,12 @@ button { color: inherit; }
 
 .fox-character { width: clamp(190px, 23vw, 320px); left: 13%; bottom: 12%; }
 .dog-character { width: clamp(165px, 19vw, 260px); left: 50%; bottom: 29%; }
+.parent-character { width: clamp(175px, 19vw, 255px); left: 68%; bottom: 35%; }
 .fox-character.is-stepping { transform: translateX(-42px); }
 .dog-character.is-stepping { transform: translateX(64px); }
 .dog-character.is-approaching { transform: translateX(-76px); }
 .fox-character.is-leaving { transform: translateX(-98px); }
+.parent-character.is-arriving { animation: parentArrives .7s ease-out both; }
 
 .character-shadow {
   position: absolute;
@@ -130,6 +132,12 @@ button { color: inherit; }
 .dog-action-back img { left: -100%; }
 .dog-action-apologize img { left: -200%; }
 .dog-repair img { left: 0; animation: dogRepairFrames 3.6s step-end forwards; }
+.dog-bubble-sprite { animation: none; overflow: visible; }
+.dog-bubble-sprite img { position: absolute; inset: -10% -7% auto; width: 114%; max-width: none; height: auto; }
+.parent-sprite img { height: 200%; }
+.parent-listen img { left: -100%; top: 0; }
+.parent-protect img { left: -100%; top: -100%; }
+.parent-reassure img { left: 0; top: -100%; }
 .is-stepping .sprite-window { animation: characterStep .72s ease-out both; }
 .is-stepping .character-shadow { transform: translateX(8px) scaleX(.88); opacity: .75; }
 
@@ -321,8 +329,7 @@ button { color: inherit; }
 .speaker-dot { flex: 0 0 34px; height: 34px; border-radius: 50%; background-color: #f5d79c; }
 .dog-avatar { background-image: url("/assets/dog-avatar.png"); background-size: 170% auto; background-position: center 18%; background-repeat: no-repeat; box-shadow: inset 0 0 0 2px #fff7df; }
 .fox-dialogue-avatar { background: #f5d79c url("/assets/fox-avatar.png") center 17% / 170% auto no-repeat; box-shadow: inset 0 0 0 2px #fff7df; }
-.trusted-adult-avatar { display: grid; place-items: center; background: #dfe8ce; color: #637a4e; box-shadow: inset 0 0 0 2px #fff7df; }
-.trusted-adult-avatar svg { width: 19px; height: 19px; stroke-width: 2.4; }
+.trusted-adult-avatar { background: #e4edcf url("/assets/fox-parent.png") 50% 10% / 300% auto no-repeat; box-shadow: inset 0 0 0 2px #fff7df; }
 .adult-bubble { border-color: rgba(151, 177, 115, .55); background: rgba(249, 252, 235, .97); }
 .positive > span { display: grid; place-items: center; flex: 0 0 30px; height: 30px; border-radius: 50%; background: #dce7bd; color: #668248; font-weight: 900; }
 .positive > span svg { width: 17px; height: 17px; stroke-width: 3; }
@@ -542,6 +549,7 @@ button { color: inherit; }
   .progress-step small { font-size: 9px; }
   .fox-character { width: clamp(175px, 46vw, 245px); left: 2%; bottom: 13%; }
   .dog-character { width: clamp(145px, 39vw, 210px); left: 52%; bottom: 31%; }
+  .parent-character { width: clamp(135px, 34vw, 185px); left: 62%; bottom: 36%; }
   .fox-character.is-stepping { transform: translateX(-18px); }
   .dog-character.is-stepping { transform: translateX(25px); }
   .dog-character.is-approaching { transform: translateX(-32px); }
@@ -549,6 +557,11 @@ button { color: inherit; }
   .journey-continue { width: 100%; margin-left: 0; }
   .welcome-card, .completion-card { border-radius: 28px; padding: 25px; }
   .welcome-overlay, .completion-overlay { padding: 14px; }
+}
+
+@keyframes parentArrives {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
