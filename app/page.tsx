@@ -148,8 +148,8 @@ function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; red
   const usesBubbleIdle = node.id === "ask-consent";
   const dogActionPose = presentation === "dog-boundary-step-back" ? "dog-action-back" : "dog-repair";
   const foxClass = presentation === "fox-step" ? "is-stepping" : presentation === "fox-leave" || presentation === "fox-seek-help" ? "is-leaving" : "";
-  const dogClass = presentation === "dog-approach" ? "is-approaching" : "";
   const showTrustedAdult = ["seek-help", "repair", "trusted-adult-response"].includes(node.id);
+  const dogClass = [presentation === "dog-approach" ? "is-approaching" : "", showTrustedAdult ? "is-with-adult" : ""].filter(Boolean).join(" ");
   const parentPose = node.id === "repair" ? "parent-protect" : node.id === "trusted-adult-response" ? "parent-reassure" : "parent-listen";
 
   return (

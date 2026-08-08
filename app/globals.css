@@ -79,12 +79,13 @@ button { color: inherit; }
 .storybook-character {
   position: absolute;
   aspect-ratio: 1;
-  transition: transform .7s cubic-bezier(.2,.8,.2,1);
+  transition: transform .7s cubic-bezier(.2,.8,.2,1), left .7s cubic-bezier(.2,.8,.2,1), bottom .7s cubic-bezier(.2,.8,.2,1);
 }
 
 .fox-character { width: clamp(190px, 23vw, 320px); left: 13%; bottom: 12%; }
 .dog-character { width: clamp(165px, 19vw, 260px); left: 50%; bottom: 29%; }
-.parent-character { width: clamp(175px, 19vw, 255px); left: 68%; bottom: 35%; }
+.dog-character.is-with-adult { left: 42%; bottom: 27%; }
+.parent-character { width: clamp(175px, 19vw, 255px); left: 73%; bottom: 37%; }
 .fox-character.is-stepping { transform: translateX(-42px); }
 .dog-character.is-stepping { transform: translateX(64px); }
 .dog-character.is-approaching { transform: translateX(-76px); }
@@ -549,7 +550,8 @@ button { color: inherit; }
   .progress-step small { font-size: 9px; }
   .fox-character { width: clamp(175px, 46vw, 245px); left: 2%; bottom: 13%; }
   .dog-character { width: clamp(145px, 39vw, 210px); left: 52%; bottom: 31%; }
-  .parent-character { width: clamp(135px, 34vw, 185px); left: 62%; bottom: 36%; }
+  .dog-character.is-with-adult { left: 42%; bottom: 28%; }
+  .parent-character { width: clamp(135px, 34vw, 185px); left: 72%; bottom: 38%; }
   .fox-character.is-stepping { transform: translateX(-18px); }
   .dog-character.is-stepping { transform: translateX(25px); }
   .dog-character.is-approaching { transform: translateX(-32px); }
