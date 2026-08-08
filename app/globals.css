@@ -441,11 +441,11 @@ button { color: inherit; }
 .coach-card p { margin: 6px 0; color: #6f5c47; font-size: 13px; line-height: 1.55; }
 .gentle-success { display: block; margin-bottom: 8px; color: #70894f; font-size: 13px; }
 .mini-growth {
-  position: absolute;
-  right: 9px;
-  bottom: 6px;
+  position: relative;
+  display: block;
   width: 62px;
   height: 62px;
+  margin: -4px -6px -10px auto;
   opacity: .5;
   transform-origin: bottom;
   background-image: url("/assets/growth.png");
@@ -454,7 +454,7 @@ button { color: inherit; }
   background-position-y: 49%;
 }
 .mini-growth.bloomed { opacity: 1; animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); }
-.observation-card p { padding-right: 34px; }
+.observation-card p { padding-right: 0; }
 .tonight-card blockquote { margin: 12px 0; padding: 15px; border: 0; border-radius: 17px; background: linear-gradient(135deg, #fff0c8, #f7dfaa); color: #60492f; font-family: Georgia, "Songti SC", serif; font-size: 14px; line-height: 1.45; }
 .coach-card .parent-reply { color: #7a6b57; font-size: 12px; }
 .coach-card .practice-record-count { margin-top: 10px; color: #8c795f; font-size: 10px; text-align: center; }
