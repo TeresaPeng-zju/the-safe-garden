@@ -40,11 +40,11 @@ const coachingInputSchema = z.object({
 });
 
 const coachingOutputSchema = z.object({
-  observation: z.string(),
-  tonightPrompt: z.string(),
-  parentReply: z.string(),
-  nextFocus: z.string(),
-  source: z.enum(["reviewed-template", "constrained-agent"]),
+  observation: z.string().describe("Factual, non-scoring summary owned by the reviewed rule engine."),
+  tonightPrompt: z.string().describe("One calm open question for a parent to ask."),
+  parentReply: z.string().describe("One listening-first response a parent can use."),
+  nextFocus: z.string().describe("One small, optional next practice."),
+  source: z.enum(["reviewed-template", "constrained-agent"]).describe("Whether reviewed fallback wording or bounded AI wording was returned."),
 });
 
 function makeCompletedRecord(practice: SanitizedCoachRequest): PracticeRecord {
@@ -52,7 +52,7 @@ function makeCompletedRecord(practice: SanitizedCoachRequest): PracticeRecord {
     id: "mcp-anonymous-practice",
     journeyId: "mcp-hug-boundary",
     contentVersion: "park-bubble-v1.2",
-    completedAt: new Date().toISOString(),
+    completedAt: "1970-01-01T00:00:00.000Z",
     initialConsent: practice.initialConsent,
     events: practice.actions.map((action, index) => ({
       id: `mcp-action-${index + 1}`,
@@ -68,7 +68,7 @@ function makeCompletedRecord(practice: SanitizedCoachRequest): PracticeRecord {
 export function createSafeGardenMcpServer(): McpServer {
   const server = new McpServer({
     name: "the-safe-garden",
-    version: "1.0.0",
+    version: "1.1.0",
   });
 
   server.registerTool(
@@ -81,7 +81,7 @@ export function createSafeGardenMcpServer(): McpServer {
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
-        idempotentHint: true,
+        idempotentHint: false,
         openWorldHint: false,
       },
     },

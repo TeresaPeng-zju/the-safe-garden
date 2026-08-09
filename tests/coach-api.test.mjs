@@ -31,6 +31,8 @@ test("the about content is complete in all three languages", () => {
     for (const field of [
       "eyebrow",
       "title",
+      "originTitle",
+      "originStory",
       "forWho",
       "needs",
       "practiceNotAssessment",
@@ -61,6 +63,20 @@ test("the safety guardrail blocks scoring, compliance, and diagnosis wording", (
   for (const sample of unsafeSamples) {
     assert.equal(isSafeCoachEnhancement(sample), false, `should reject: ${JSON.stringify(sample)}`);
   }
+});
+
+test("the Agent guardrail enforces an open question, listening-first reply, and optional next step", () => {
+  const safe = {
+    tonightPrompt: "Which trusted adult could you walk toward if someone does not stop?",
+    parentReply: "Thank you for telling me. I am listening and will stay with you.",
+    nextFocus: "Next time, you could point to one trusted adult in a family photo.",
+  };
+  assert.equal(isSafeCoachEnhancement(safe), true);
+  assert.equal(isSafeCoachEnhancement({ ...safe, tonightPrompt: "Practice naming a trusted adult tonight." }), false);
+  assert.equal(isSafeCoachEnhancement({ ...safe, parentReply: "Explain why you waited before asking for help." }), false);
+  assert.equal(isSafeCoachEnhancement({ ...safe, parentReply: "谢谢你愿意一起练习，这很好。" }), false);
+  assert.equal(isSafeCoachEnhancement({ ...safe, nextFocus: "You must repeat this until the child complies." }), false);
+  assert.equal(isSafeCoachEnhancement({ ...safe, tonightPrompt: "Should we diagnose this response?" }), false);
 });
 
 test("only the three parent-facing fields can change; observation stays reviewed", () => {

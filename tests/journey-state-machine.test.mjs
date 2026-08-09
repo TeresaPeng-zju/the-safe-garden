@@ -9,6 +9,7 @@ import {
   createPracticeRecord,
   getJourneyNode,
   hugBoundaryJourney,
+  parsePracticeRecords,
   savePracticeRecord,
 } from "../lib/journey.ts";
 
@@ -58,6 +59,18 @@ test("completed practices persist once per journey", () => {
   assert.equal(once.length, 1);
   assert.equal(twice.length, 1);
   assert.equal(twice[0].contentVersion, "park-bubble-v1.2");
+});
+
+test("malformed device history is discarded instead of breaking the family view", () => {
+  const valid = createPracticeRecord(completeJourney("space"), "2026-01-01T00:05:00.000Z");
+  const parsed = parsePracticeRecords(JSON.stringify([
+    valid,
+    { ...valid, id: "bad-date", completedAt: "not-a-date" },
+    { ...valid, id: "bad-action", events: [{ ...valid.events[0], action: "invented-action" }] },
+    { ...valid, id: "bad-shape", journeyId: null },
+  ]));
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].id, valid.id);
 });
 
 test("completed practice records the exploration, support style, and chosen garden plot", () => {

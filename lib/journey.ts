@@ -337,16 +337,91 @@ export function createPracticeRecord(
   };
 }
 
+const semanticActions = new Set<SemanticAction>([
+  "ask-consent",
+  "accept-contact",
+  "set-boundary",
+  "respect-boundary",
+  "approach-again",
+  "step-back",
+  "repeat-boundary",
+  "continue-after-boundary",
+  "leave",
+  "seek-help",
+  "repair",
+  "trusted-adult-support",
+]);
+
+function isValidStoredDate(value: unknown): value is string {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
+function sanitizeStoredEvent(value: unknown): JourneyEvent | null {
+  if (!value || typeof value !== "object") return null;
+  const event = value as Partial<JourneyEvent>;
+  if (
+    typeof event.id !== "string"
+    || typeof event.nodeId !== "string"
+    || typeof event.action !== "string"
+    || !semanticActions.has(event.action as SemanticAction)
+    || !isValidStoredDate(event.occurredAt)
+  ) return null;
+  if (event.actor && !["player", "dog", "trusted-adult"].includes(event.actor)) return null;
+  if (event.choiceId && event.choiceId !== "accept" && event.choiceId !== "space") return null;
+  return {
+    id: event.id,
+    nodeId: event.nodeId,
+    action: event.action as SemanticAction,
+    occurredAt: event.occurredAt,
+    ...(event.actor ? { actor: event.actor } : {}),
+    ...(event.choiceId ? { choiceId: event.choiceId } : {}),
+  };
+}
+
 export function parsePracticeRecords(value: string | null): PracticeRecord[] {
   if (!value) return [];
   try {
-    const parsed = JSON.parse(value);
+    const parsed: unknown = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((record): record is PracticeRecord => (
-      typeof record?.id === "string"
-      && (record.contentVersion === "hug-boundary-v1.1" || record.contentVersion === "park-bubble-v1.2")
-      && Array.isArray(record.events)
-    ));
+    return parsed.slice(0, 20).flatMap((value): PracticeRecord[] => {
+      if (!value || typeof value !== "object") return [];
+      const record = value as Partial<PracticeRecord>;
+      if (
+        typeof record.id !== "string"
+        || typeof record.journeyId !== "string"
+        || (record.contentVersion !== "hug-boundary-v1.1" && record.contentVersion !== "park-bubble-v1.2")
+        || !isValidStoredDate(record.completedAt)
+        || (record.initialConsent !== null && record.initialConsent !== "accept" && record.initialConsent !== "space")
+        || !Array.isArray(record.events)
+        || record.events.length > 32
+      ) return [];
+      const events = record.events.map(sanitizeStoredEvent);
+      if (events.some((event) => event === null)) return [];
+
+      const discoveries = Array.isArray(record.discoveries)
+        ? record.discoveries.filter((item, index, all): item is DiscoveryId => (
+          (item === "petal" || item === "stone") && all.indexOf(item) === index
+        ))
+        : undefined;
+      const supportMode = record.supportMode === "standard" || record.supportMode === "picture" || record.supportMode === "model-first"
+        ? record.supportMode
+        : undefined;
+      const gardenPlot = typeof record.gardenPlot === "number" && Number.isFinite(record.gardenPlot)
+        ? Math.max(0, Math.min(7, Math.round(record.gardenPlot)))
+        : undefined;
+
+      return [{
+        id: record.id,
+        journeyId: record.journeyId,
+        contentVersion: record.contentVersion,
+        completedAt: record.completedAt,
+        initialConsent: record.initialConsent,
+        events: events as JourneyEvent[],
+        ...(discoveries ? { discoveries } : {}),
+        ...(supportMode ? { supportMode } : {}),
+        ...(gardenPlot !== undefined ? { gardenPlot } : {}),
+      }];
+    });
   } catch {
     return [];
   }
@@ -357,7 +432,7 @@ export function savePracticeRecord(records: PracticeRecord[], record: PracticeRe
   return [record, ...records].slice(0, 20);
 }
 
-const evaluativeTerms = /\b(score|correct|incorrect|passed|failed|ability|mastered|good child|bad child)\b|得分|答对|答错|通过|失败|能力|掌握|答對|答錯|通過|失敗|掌握|乖|不乖/iu;
+const evaluativeTerms = /\b(score|correct|incorrect|passed|failed|ability|mastered|good child|bad child|good job|great job|well done|performance)\b|得分|答对|答错|通过|失败|能力|掌握|答對|答錯|通過|失敗|掌握|乖|不乖|很好|做得好|真棒|表现|表現/iu;
 
 const coachingActionOrder = ["step-back", "repeat-boundary", "leave", "seek-help"] as const;
 type CoachingAction = (typeof coachingActionOrder)[number];
@@ -458,18 +533,25 @@ export function buildReviewedCoachCard(record: PracticeRecord, language: Languag
 }
 
 const disclosurePromises = /keep (this|it) secret|promise not to tell|一定保密|不要告訴|不要告诉|替你保密|為你保密/iu;
+const harmfulCoachTerms = /\b(diagnos(?:e|ed|es|ing|is)|obedien(?:t|ce)|compliance|punish(?:ment|ed|ing)?|blame|confront .* alone)\b|诊断|診斷|服从|服從|惩罚|懲罰|责怪|責怪|独自面对|獨自面對/iu;
+const coerciveNextFocus = /\b(must|required|force(?:d)?|until (?:they|the child))\b|必须|必須|强迫|強迫|一定要|直到孩子/iu;
+const supportiveReplyOpening = /^[“”"'「『]?(?:thank|thanks|i hear|i am listening|i['’]m listening|i believe|i will listen|谢谢|謝謝|我听|我聽|我在听|我在聽|我相信|我会听|我會聽)/iu;
 
 export function isSafeCoachEnhancement(candidate: unknown): candidate is AgentCoachEnhancement {
   if (!candidate || typeof candidate !== "object") return false;
   const value = candidate as Partial<AgentCoachEnhancement>;
   const values = [value.tonightPrompt, value.parentReply, value.nextFocus];
-  return values.every((item) => (
+  if (!values.every((item) => (
     typeof item === "string"
     && item.trim().length >= 8
     && item.length <= 220
     && !evaluativeTerms.test(item)
     && !disclosurePromises.test(item)
-  ));
+    && !harmfulCoachTerms.test(item)
+  ))) return false;
+  return /[?？]/u.test(value.tonightPrompt as string)
+    && supportiveReplyOpening.test((value.parentReply as string).trim())
+    && !coerciveNextFocus.test(value.nextFocus as string);
 }
 
 export function applyConstrainedAgentEnhancement(
@@ -483,9 +565,9 @@ export function applyConstrainedAgentEnhancement(
   // extra keys.
   return {
     ...fallback,
-    tonightPrompt: candidate.tonightPrompt,
-    parentReply: candidate.parentReply,
-    nextFocus: candidate.nextFocus,
+    tonightPrompt: candidate.tonightPrompt.trim(),
+    parentReply: candidate.parentReply.trim(),
+    nextFocus: candidate.nextFocus.trim(),
     source: "constrained-agent",
   };
 }
@@ -515,12 +597,12 @@ export const aboutContent: Record<Language, AboutContent> = {
     originStory: "The Safe Garden began with Xiaoshu (a pseudonym), an autistic primary-school child the creator met while volunteering. When a relative moved in for a hug, he stepped back but could not quickly explain it in words. Repeated verbal teaching soon felt like a test. This is the concrete, visual, repeatable practice we wished he and his family had in that moment.",
     forWho: "This is for families who prefer concrete, visual, repeatable practice rather than abstract talks.",
     needs: "It was shaped with the different language, reading, picture-cue, and pacing needs that many autistic children value in mind.",
-practiceNotAssessment: "It offers practice support. It does not assess, diagnose, or measure a child’s ability.",
+    practiceNotAssessment: "It offers practice support. It does not assess, diagnose, or measure a child’s ability.",
     alongside: "Use it alongside your child’s own way of communicating and any professional support you already have.",
-safetyTitle: "How safety and AI work here",
+    safetyTitle: "How safety and AI work here",
     safetyEngine: "A reviewed rule engine owns the child story, safety steps, and the factual record. It always runs, with or without AI.",
     safetyWording: "The optional AI can only soften the parent wording — one question, one reply, one small next step.",
- safetyFallback: "Anything unsafe, slow, or malformed falls back to the reviewed offline template automatically.",
+    safetyFallback: "Anything unsafe, slow, or malformed falls back to the reviewed offline template automatically.",
   },
   zh: {
     eyebrow: "关于这次练习",

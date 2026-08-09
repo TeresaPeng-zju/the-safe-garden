@@ -30,6 +30,7 @@ test("MCP initialize succeeds without authentication", async () => {
   assert.equal(response.status, 200);
   const payload = await response.json();
   assert.equal(payload.result.serverInfo.name, "the-safe-garden");
+  assert.equal(payload.result.serverInfo.version, "1.1.0");
   assert.equal(payload.result.protocolVersion, "2025-06-18");
 });
 
@@ -45,6 +46,7 @@ test("MCP tools/list exposes a stable tool with JSON Schema", async () => {
   assert.equal(payload.result.tools.length, 1);
   const [tool] = payload.result.tools;
   assert.equal(tool.name, "create_parent_coaching_card");
+  assert.equal(tool.annotations.idempotentHint, false);
   assert.equal(tool.inputSchema.type, "object");
   assert.ok(tool.inputSchema.properties.language);
 });

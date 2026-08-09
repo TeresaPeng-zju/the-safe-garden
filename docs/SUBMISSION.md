@@ -39,6 +39,7 @@ The core innovation is a **child ↔ parent ↔ rule-engine ↔ constrained-AI**
 - The request is same-origin checked, size-limited, and reduced to a whitelist: language, support style, initial consent choice, and practiced semantic actions. No names, addresses, contact details, or free-text disclosures are ever sent.
 - The objective `observation` always comes from the reviewed template; the AI can only ever change `tonightPrompt`, `parentReply`, and `nextFocus`, and even a response with extra keys cannot overwrite the record.
 - Output is length-limited and screened for scores, correctness, pass/fail, ability or mastery judgements, compliance praise, diagnosis, "good/bad child", and secrecy promises. Timeouts, provider errors, empty output, malformed JSON, and guardrail failures all fall back to the reviewed offline card — so the game is fully playable with no key at all.
+- Runtime validation also requires an actual open question, a listening/thanks/belief opening for the parent reply, and a non-coercive next step; prompt instructions alone are never treated as a safety boundary.
 - Children never talk to an open-ended chatbot.
 
 ## Three-minute presentation
