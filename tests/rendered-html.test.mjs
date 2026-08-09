@@ -61,3 +61,14 @@ test("uses artwork and icon components instead of emoji UI", async () => {
   assert.match(styles, /dog-avatar\.png/);
   assert.match(pageSource, /growth-icon/);
 });
+
+test("parent navigation and family settings are functional", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /type PanelView = "home" \| "journey" \| "garden" \| "notes"/);
+  assert.match(pageSource, /onClick=\{\(\) => openPanelView\("journey"\)\}/);
+  assert.match(pageSource, /onClick=\{\(\) => openPanelView\("garden"\)\}/);
+  assert.match(pageSource, /onClick=\{\(\) => openPanelView\("notes"\)\}/);
+  assert.match(pageSource, /setSettingsOpen\(true\)/);
+  assert.match(pageSource, /safe-garden-support-mode/);
+  assert.match(pageSource, /records\.map\(\(record, index\)/);
+});

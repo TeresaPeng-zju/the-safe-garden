@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowRight,
+  CalendarDays,
   Check,
   DoorOpen,
   Flower2,
@@ -11,6 +12,7 @@ import {
   Heart,
   Home as HomeIcon,
   Lightbulb,
+  Lock,
   Map,
   Music2,
   NotebookText,
@@ -20,6 +22,7 @@ import {
   Trees,
   UserRoundCheck,
   VolumeX,
+  X,
 } from "lucide-react";
 import {
   advanceJourney,
@@ -39,6 +42,12 @@ import {
   type PracticeRecord,
   type SemanticAction,
 } from "../lib/journey";
+
+type PanelView = "home" | "journey" | "garden" | "notes";
+type SupportMode = "standard" | "picture";
+
+const SUPPORT_MODE_STORAGE_KEY = "safe-garden-support-mode";
+const MUSIC_STORAGE_KEY = "safe-garden-music";
 
 const copy = {
   en: {
@@ -78,6 +87,43 @@ const copy = {
     actorDog: "Puppy",
     actorPlayer: "Little Fox",
     actorAdult: "Trusted adult",
+    settingsTitle: "Family settings",
+    settingsIntro: "Choose a calmer, clearer way to practice together.",
+    close: "Close",
+    languageLabel: "Language",
+    english: "English",
+    chinese: "中文",
+    supportMode: "Support style",
+    standardSupport: "Words + icons",
+    standardSupportHint: "Balanced prompts for this practice",
+    pictureSupport: "Larger picture cues",
+    pictureSupportHint: "Makes action symbols easier to notice",
+    on: "On",
+    off: "Off",
+    journeyLibrary: "Practice journeys",
+    journeyLibraryIntro: "Choose one short, low-pressure situation to practice together.",
+    activeJourney: "Hugs and body space",
+    activeJourneyBody: "Practice consent, stepping back, clear words, leaving, and asking for help.",
+    continueJourney: "Continue today’s journey",
+    startAgain: "Practice this journey",
+    comingLater: "Coming later",
+    secretJourney: "Uncomfortable secrets",
+    secretJourneyBody: "Practice noticing an uncomfortable secret and telling a trusted adult.",
+    familiarJourney: "Familiar people and strangers",
+    familiarJourneyBody: "Look at what someone does, not only whether the person is familiar.",
+    careJourney: "Care and medical visits",
+    careJourneyBody: "Practice clear explanations, permission, and support during care.",
+    gardenViewTitle: "Our practice garden",
+    gardenViewIntro: "Each flower marks a completed family practice. It never marks a score.",
+    openPlots: "Open places for future practices",
+    historyTitle: "Practice notes",
+    historyIntro: "A private, factual history saved only on this device.",
+    noHistory: "No completed practice has been recorded yet.",
+    initialChoiceSpace: "Little Fox first asked for space.",
+    initialChoiceAccept: "Little Fox first accepted the hug.",
+    safetyActions: (count: number) => `${count} safety steps were practiced.`,
+    practiceNumber: (number: number) => `Practice ${number}`,
+    today: "Today",
   },
   zh: {
     brand: "安全花园",
@@ -116,6 +162,43 @@ const copy = {
     actorDog: "小狗",
     actorPlayer: "小狐狸",
     actorAdult: "可信赖的大人",
+    settingsTitle: "家庭设置",
+    settingsIntro: "选择更平静、更清晰的共同练习方式。",
+    close: "关闭",
+    languageLabel: "语言",
+    english: "English",
+    chinese: "中文",
+    supportMode: "支持方式",
+    standardSupport: "文字与图标",
+    standardSupportHint: "使用均衡的文字和动作提示",
+    pictureSupport: "放大图片提示",
+    pictureSupportHint: "让动作符号更容易被注意到",
+    on: "开启",
+    off: "关闭",
+    journeyLibrary: "练习旅程",
+    journeyLibraryIntro: "选择一个短小、低压力的生活情境，一起练习。",
+    activeJourney: "拥抱与身体空间",
+    activeJourneyBody: "练习表达意愿、后退、清楚说出边界、离开和求助。",
+    continueJourney: "继续今天的旅程",
+    startAgain: "练习这段旅程",
+    comingLater: "后续开放",
+    secretJourney: "让人不舒服的秘密",
+    secretJourneyBody: "练习察觉让人不舒服的秘密，并告诉可信赖的大人。",
+    familiarJourney: "熟人与陌生人",
+    familiarJourneyBody: "根据对方做了什么来判断，而不只看是否认识。",
+    careJourney: "照护与就医",
+    careJourneyBody: "练习在照护中获得清楚说明、同意与支持。",
+    gardenViewTitle: "我们的练习花园",
+    gardenViewIntro: "每朵花代表家庭完成过一次练习，从不代表分数。",
+    openPlots: "留给未来练习的位置",
+    historyTitle: "练习记录",
+    historyIntro: "只保存在这台设备上的客观记录。",
+    noHistory: "还没有完成并记录的练习。",
+    initialChoiceSpace: "小狐狸一开始选择需要空间。",
+    initialChoiceAccept: "小狐狸一开始选择接受拥抱。",
+    safetyActions: (count: number) => `这次练习了 ${count} 个安全行动。`,
+    practiceNumber: (number: number) => `第 ${number} 次练习`,
+    today: "今天",
   },
 } as const;
 
@@ -234,6 +317,10 @@ export default function Home() {
   const [completedRecord, setCompletedRecord] = useState<PracticeRecord | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [musicOn, setMusicOn] = useState(true);
+  const [panelView, setPanelView] = useState<PanelView>("home");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [supportMode, setSupportMode] = useState<SupportMode>("standard");
+  const [hydrated, setHydrated] = useState(false);
   const recordedJourneyRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const node = getJourneyNode(journey.nodeId);
@@ -243,26 +330,43 @@ export default function Home() {
     const hydrationTask = window.setTimeout(() => {
       const savedCalm = window.localStorage.getItem("safe-garden-calm");
       const savedLanguage = window.localStorage.getItem("safe-garden-language") as Language | null;
+      const savedSupportMode = window.localStorage.getItem(SUPPORT_MODE_STORAGE_KEY) as SupportMode | null;
+      const savedMusic = window.localStorage.getItem(MUSIC_STORAGE_KEY);
       setRecords(parsePracticeRecords(window.localStorage.getItem(PRACTICE_STORAGE_KEY)));
       if (savedCalm === "true" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         setReducedMotion(true);
         setMusicOn(false);
       }
       if (savedLanguage === "zh" || savedLanguage === "en") setLanguage(savedLanguage);
+      if (savedSupportMode === "standard" || savedSupportMode === "picture") setSupportMode(savedSupportMode);
+      if (savedCalm !== "true" && (savedMusic === "true" || savedMusic === "false")) setMusicOn(savedMusic === "true");
+      setHydrated(true);
     }, 0);
     return () => window.clearTimeout(hydrationTask);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     window.localStorage.setItem("safe-garden-calm", String(reducedMotion));
     if (reducedMotion) {
       audioRef.current?.pause();
     }
-  }, [reducedMotion]);
+  }, [reducedMotion, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     window.localStorage.setItem("safe-garden-language", language);
-  }, [language]);
+  }, [language, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem(SUPPORT_MODE_STORAGE_KEY, supportMode);
+  }, [supportMode, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem(MUSIC_STORAGE_KEY, String(musicOn));
+  }, [musicOn, hydrated]);
 
   useEffect(() => {
     if (node.kind !== "ending" || recordedJourneyRef.current === journey.journeyId) return;
@@ -320,6 +424,46 @@ export default function Home() {
     setStarted(true);
   };
 
+  const openPanelView = (view: PanelView) => {
+    setSettingsOpen(false);
+    setPanelView(view);
+    window.setTimeout(() => {
+      document.querySelector(".parent-panel")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+    }, 0);
+  };
+
+  const openSettings = () => {
+    setSettingsOpen(true);
+    window.setTimeout(() => {
+      document.querySelector(".parent-panel")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+    }, 0);
+  };
+
+  const launchJourney = () => {
+    if (node.kind === "ending") restart();
+    else setStarted(true);
+    setSettingsOpen(false);
+    setPanelView("home");
+    window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+  };
+
+  const formatPracticeDate = (value: string) => {
+    const date = new Date(value);
+    const now = new Date();
+    if (date.toDateString() === now.toDateString()) return t.today;
+    return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
+
+  const safetyActionCount = (record: PracticeRecord) => new Set(
+    record.events
+      .map((event) => event.action)
+      .filter((action) => ["step-back", "repeat-boundary", "leave", "seek-help"].includes(action)),
+  ).size;
+
   const progressIndex = !started ? 0 : node.kind === "ending" ? 3 : ["ask-consent", "respect-accept", "respect-space"].includes(node.id) ? 1 : 2;
   const progressItems = [
     { icon: <HomeIcon />, label: t.progressHome },
@@ -329,7 +473,7 @@ export default function Home() {
   ];
 
   return (
-    <main className={`app-shell ${reducedMotion ? "reduced-motion" : ""}`}>
+    <main className={`app-shell ${reducedMotion ? "reduced-motion" : ""} ${supportMode === "picture" ? "picture-support" : ""}`}>
       <audio ref={audioRef} src="/assets/garden-music.mp3" loop preload="metadata" />
 
       <section className="story-stage" aria-label={t.todaysWalk}>
@@ -352,9 +496,9 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <div className="garden-shortcut" aria-label={t.ourGarden}>
+          <button className="garden-shortcut" type="button" onClick={() => openPanelView("garden")} aria-label={t.ourGarden}>
             <span className="growth-icon stage-sprout" aria-hidden="true" /><small>{t.ourGarden}</small>
-          </div>
+          </button>
         </header>
 
         {!started && (
@@ -409,14 +553,44 @@ export default function Home() {
         </nav>
       </section>
 
-      <aside className={`parent-panel ${node.kind === "ending" ? "mobile-visible" : ""}`} aria-label={t.forParents}>
+      <aside className={`parent-panel ${node.kind === "ending" || panelView !== "home" || settingsOpen ? "mobile-visible" : ""}`} aria-label={t.forParents}>
         <header className="profile-header">
           <div className="profile-avatar"><img className="profile-avatar-image" src="/assets/fox-avatar.png" alt="" /></div>
           <div><strong>Little Fox</strong><span>{language === "en" ? "Today’s practice" : "今天的练习"}</span></div>
-          <button type="button" aria-label={t.settings} onClick={() => setCalmMode(!reducedMotion)}><Settings aria-hidden="true" /></button>
+          <button type="button" aria-label={t.settings} aria-expanded={settingsOpen} onClick={openSettings}><Settings aria-hidden="true" /></button>
         </header>
 
         <div className="panel-scroll">
+          {settingsOpen ? (
+            <section className="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+              <header className="settings-sheet-header">
+                <div><p className="panel-eyebrow">{t.brand}</p><h2 id="settings-title">{t.settingsTitle}</h2></div>
+                <button className="settings-close" type="button" onClick={() => setSettingsOpen(false)} aria-label={t.close}><X aria-hidden="true" /></button>
+              </header>
+              <p className="panel-intro">{t.settingsIntro}</p>
+              <div className="settings-group">
+                <h3>{t.languageLabel}</h3>
+                <div className="segmented-control">
+                  <button type="button" className={language === "en" ? "selected" : ""} aria-pressed={language === "en"} onClick={() => setLanguage("en")}>{t.english}</button>
+                  <button type="button" className={language === "zh" ? "selected" : ""} aria-pressed={language === "zh"} onClick={() => setLanguage("zh")}>{t.chinese}</button>
+                </div>
+              </div>
+              <div className="settings-group">
+                <h3>{t.supportMode}</h3>
+                <button className={`support-option ${supportMode === "standard" ? "selected" : ""}`} type="button" aria-pressed={supportMode === "standard"} onClick={() => setSupportMode("standard")}>
+                  <span className="support-option-icon"><NotebookText aria-hidden="true" /></span><span><strong>{t.standardSupport}</strong><small>{t.standardSupportHint}</small></span><Check aria-hidden="true" />
+                </button>
+                <button className={`support-option ${supportMode === "picture" ? "selected" : ""}`} type="button" aria-pressed={supportMode === "picture"} onClick={() => setSupportMode("picture")}>
+                  <span className="support-option-icon"><Flower2 aria-hidden="true" /></span><span><strong>{t.pictureSupport}</strong><small>{t.pictureSupportHint}</small></span><Check aria-hidden="true" />
+                </button>
+              </div>
+              <div className="settings-group setting-toggles">
+                <label className="setting-row"><span><strong>{t.calmLabel}</strong><small>{t.calmHint}</small></span><input type="checkbox" checked={reducedMotion} onChange={(event) => setCalmMode(event.target.checked)} /><span className="switch" aria-hidden="true" /></label>
+                <label className="setting-row"><span><strong>{t.soundLabel}</strong><small>{musicOn ? t.on : t.off}</small></span><input type="checkbox" checked={musicOn} disabled={reducedMotion} onChange={() => void toggleMusic()} /><span className="switch" aria-hidden="true" /></label>
+              </div>
+            </section>
+          ) : panelView === "home" ? (
+            <>
           <section className="coach-card observation-card">
             <div className="card-title"><span className="title-growth stage-sprout" aria-hidden="true" /><h2>{node.kind === "ending" ? t.observedTitle : t.forParents}</h2></div>
             {node.kind === "ending" && coachCard ? (
@@ -444,13 +618,67 @@ export default function Home() {
           </section>
 
           <p className="panel-disclaimer">{t.safeNote}</p>
+            </>
+          ) : panelView === "journey" ? (
+            <section className="panel-view" aria-labelledby="journey-library-title">
+              <p className="panel-eyebrow">{t.todaysWalk}</p>
+              <h2 id="journey-library-title">{t.journeyLibrary}</h2>
+              <p className="panel-intro">{t.journeyLibraryIntro}</p>
+              <article className="journey-library-card active-journey">
+                <span className="journey-card-icon"><Hand aria-hidden="true" /></span>
+                <div><strong>{t.activeJourney}</strong><p>{t.activeJourneyBody}</p></div>
+                <button className="panel-primary-action" type="button" onClick={launchJourney}>{started && node.kind !== "ending" ? t.continueJourney : t.startAgain}<ArrowRight aria-hidden="true" /></button>
+              </article>
+              {[
+                [t.secretJourney, t.secretJourneyBody],
+                [t.familiarJourney, t.familiarJourneyBody],
+                [t.careJourney, t.careJourneyBody],
+              ].map(([title, body]) => (
+                <article className="journey-library-card future-journey" key={title}>
+                  <span className="journey-card-icon"><Lock aria-hidden="true" /></span>
+                  <div><strong>{title}</strong><p>{body}</p><small>{t.comingLater}</small></div>
+                </article>
+              ))}
+            </section>
+          ) : panelView === "garden" ? (
+            <section className="panel-view" aria-labelledby="garden-view-title">
+              <p className="panel-eyebrow">{t.keepGrowing}</p>
+              <h2 id="garden-view-title">{t.gardenViewTitle}</h2>
+              <p className="panel-intro">{t.gardenViewIntro}</p>
+              <div className="garden-view-bed" aria-label={t.practicesRecorded(records.length)}>
+                {Array.from({ length: 8 }, (_, index) => (
+                  <span className={`garden-plot ${index < Math.min(records.length, 8) ? "completed" : "open"}`} key={index}>
+                    <span className={`growth-stage ${index < Math.min(records.length, 8) ? "stage-flower" : "stage-seed"}`} />
+                  </span>
+                ))}
+              </div>
+              <div className="garden-summary"><strong>{t.practicesRecorded(records.length)}</strong><span>{t.openPlots}: {Math.max(0, 8 - records.length)}</span></div>
+              <p className="panel-disclaimer">{t.safeNote}</p>
+            </section>
+          ) : (
+            <section className="panel-view" aria-labelledby="history-title">
+              <p className="panel-eyebrow">{t.safeNote}</p>
+              <h2 id="history-title">{t.historyTitle}</h2>
+              <p className="panel-intro">{t.historyIntro}</p>
+              {records.length === 0 ? <div className="history-empty"><NotebookText aria-hidden="true" /><p>{t.noHistory}</p></div> : (
+                <div className="history-list">
+                  {records.map((record, index) => (
+                    <article className="history-entry" key={record.id}>
+                      <span className="history-growth stage-flower" aria-hidden="true" />
+                      <div><strong>{t.practiceNumber(records.length - index)}</strong><span className="history-date"><CalendarDays aria-hidden="true" />{formatPracticeDate(record.completedAt)}</span><p>{record.initialConsent === "space" ? t.initialChoiceSpace : t.initialChoiceAccept} {t.safetyActions(safetyActionCount(record))}</p></div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         <nav className="panel-nav" aria-label="Parent navigation">
-          <button className="active" type="button"><HomeIcon aria-hidden="true" />{t.home}</button>
-          <button type="button"><Map aria-hidden="true" />{t.journey}</button>
-          <button type="button"><Flower2 aria-hidden="true" />{t.garden}</button>
-          <button type="button"><NotebookText aria-hidden="true" />{t.notes}</button>
+          <button className={panelView === "home" && !settingsOpen ? "active" : ""} aria-current={panelView === "home" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("home")} type="button"><HomeIcon aria-hidden="true" />{t.home}</button>
+          <button className={panelView === "journey" && !settingsOpen ? "active" : ""} aria-current={panelView === "journey" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("journey")} type="button"><Map aria-hidden="true" />{t.journey}</button>
+          <button className={panelView === "garden" && !settingsOpen ? "active" : ""} aria-current={panelView === "garden" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("garden")} type="button"><Flower2 aria-hidden="true" />{t.garden}</button>
+          <button className={panelView === "notes" && !settingsOpen ? "active" : ""} aria-current={panelView === "notes" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("notes")} type="button"><NotebookText aria-hidden="true" />{t.notes}</button>
         </nav>
       </aside>
     </main>

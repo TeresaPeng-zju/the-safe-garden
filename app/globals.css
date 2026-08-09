@@ -207,7 +207,8 @@ button { color: inherit; }
   transition: transform .2s ease, box-shadow .2s ease;
 }
 
-.garden-shortcut { cursor: default; }
+.garden-shortcut { color: var(--ink); cursor: pointer; }
+.garden-shortcut:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(102,78,44,.2); }
 .garden-shortcut .growth-icon { width: 42px; height: 38px; }
 .garden-shortcut small { font-weight: 700; }
 
@@ -499,10 +500,77 @@ button { color: inherit; }
 .garden-bed .flower-grown { animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); filter: none; }
 .panel-disclaimer { margin: 0; text-align: center; color: #a28d73; font-size: 10px; }
 
+.panel-view,
+.settings-sheet { display: grid; align-content: start; gap: 13px; }
+.panel-view > h2,
+.settings-sheet h2 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 26px; line-height: 1.12; }
+.panel-eyebrow { margin: 0; color: var(--sage); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.panel-intro { margin: -3px 0 5px; color: #79654f; font-size: 13px; line-height: 1.55; }
+
+.settings-sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.settings-sheet-header > div { display: grid; gap: 7px; }
+.settings-close { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 38px; border: 0; border-radius: 12px; background: #f0e6d1; cursor: pointer; }
+.settings-close svg { width: 19px; height: 19px; }
+.settings-group { display: grid; gap: 8px; padding-top: 4px; }
+.settings-group h3 { margin: 0; font-size: 12px; color: #806a51; }
+.segmented-control { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 15px; background: #eee2ca; }
+.segmented-control button { min-height: 40px; border: 0; border-radius: 11px; background: transparent; cursor: pointer; font-size: 12px; font-weight: 800; }
+.segmented-control button.selected { color: #a85f26; background: #fffaf0; box-shadow: 0 4px 12px rgba(91,64,41,.1); }
+.support-option { display: grid; grid-template-columns: 40px 1fr 18px; align-items: center; gap: 10px; padding: 12px; border: 1px solid rgba(151,119,72,.14); border-radius: 17px; background: rgba(255,252,244,.72); cursor: pointer; text-align: left; }
+.support-option.selected { border-color: #aeba82; background: #f3f3dd; box-shadow: inset 0 0 0 1px rgba(112,134,79,.18); }
+.support-option > span:nth-child(2) { display: grid; gap: 2px; }
+.support-option strong { font-size: 12px; }
+.support-option small { color: var(--muted); font-size: 10px; line-height: 1.35; }
+.support-option > svg { width: 17px; height: 17px; color: var(--sage); opacity: 0; }
+.support-option.selected > svg { opacity: 1; }
+.support-option-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px; color: #a96932; background: #f5e6c6; }
+.support-option-icon svg { width: 19px; height: 19px; }
+.setting-toggles { gap: 9px; }
+
+.journey-library-card { display: grid; grid-template-columns: 42px 1fr; gap: 11px; padding: 15px; border: 1px solid rgba(151,119,72,.13); border-radius: 20px; background: rgba(255,252,244,.78); box-shadow: 0 7px 20px rgba(103,78,42,.06); }
+.journey-library-card > div { min-width: 0; }
+.journey-library-card strong { display: block; font-family: Georgia, "Songti SC", serif; font-size: 16px; }
+.journey-library-card p { margin: 5px 0 0; color: #76614a; font-size: 11px; line-height: 1.5; }
+.journey-card-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: #e8edcf; color: var(--sage); }
+.journey-card-icon svg { width: 21px; height: 21px; }
+.active-journey { border-color: rgba(233,165,62,.35); background: linear-gradient(145deg, rgba(255,251,239,.95), rgba(250,235,199,.75)); }
+.panel-primary-action { grid-column: 1 / -1; min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 0; border-radius: 13px; background: #e9a53e; color: #5d3e20; cursor: pointer; font-size: 11px; font-weight: 900; }
+.panel-primary-action svg { width: 16px; height: 16px; }
+.future-journey { opacity: .7; box-shadow: none; }
+.future-journey .journey-card-icon { color: #978873; background: #eee7da; }
+.future-journey small { display: inline-block; margin-top: 7px; padding: 3px 7px; border-radius: 999px; color: #786b57; background: #eee5d4; font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+
+.garden-view-bed { min-height: 270px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; padding: 18px 12px 13px; border-radius: 24px; background: linear-gradient(180deg, #e7eccb 0 68%, #b88a55 69% 79%, #8e643f 80%); overflow: hidden; }
+.garden-plot { min-width: 0; height: 108px; display: grid; place-items: end center; border-bottom: 2px solid rgba(91,64,41,.13); }
+.garden-plot .growth-stage { width: 100%; height: 105px; flex: none; }
+.garden-plot.open { opacity: .45; filter: grayscale(.25); }
+.garden-plot.completed .growth-stage { animation: flowerPop .65s cubic-bezier(.2,.9,.2,1.15) both; }
+.garden-summary { display: grid; gap: 3px; padding: 13px 15px; border-radius: 17px; background: rgba(255,252,244,.78); text-align: center; }
+.garden-summary strong { font-size: 12px; }
+.garden-summary span { color: var(--muted); font-size: 10px; }
+
+.history-list { display: grid; gap: 10px; }
+.history-entry { display: grid; grid-template-columns: 58px 1fr; gap: 11px; align-items: center; padding: 13px; border: 1px solid rgba(151,119,72,.13); border-radius: 19px; background: rgba(255,252,244,.76); }
+.history-entry > div { min-width: 0; display: grid; gap: 4px; }
+.history-entry strong { font-family: Georgia, "Songti SC", serif; font-size: 15px; }
+.history-entry p { margin: 1px 0 0; color: #75614c; font-size: 10px; line-height: 1.45; }
+.history-growth { width: 58px; height: 58px; display: block; background: url("/assets/growth.png") 100% 49% / 400% auto no-repeat; }
+.history-date { display: flex; align-items: center; gap: 5px; color: #99846c; font-size: 9px; }
+.history-date svg { width: 12px; height: 12px; }
+.history-empty { min-height: 190px; display: grid; place-items: center; align-content: center; gap: 10px; padding: 20px; border: 1px dashed #d7c9af; border-radius: 21px; color: #94816a; text-align: center; }
+.history-empty svg { width: 32px; height: 32px; }
+.history-empty p { margin: 0; max-width: 220px; font-size: 12px; line-height: 1.5; }
+
+.picture-support .choice-stack button { min-height: 66px; font-size: 16px; }
+.picture-support .choice-icon { flex-basis: 46px; height: 46px; border-radius: 15px; }
+.picture-support .choice-icon svg { width: 27px; height: 27px; }
+.picture-support .journey-continue > svg { width: 25px; height: 25px; }
+
 .panel-nav { min-height: 91px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding: 10px 15px 14px; border-top: 1px solid rgba(147,119,76,.12); background: rgba(255,249,235,.8); }
 .panel-nav button { height: 64px; border: 0; border-radius: 16px; display: grid; place-items: center; align-content: center; gap: 3px; background: transparent; color: #95846f; cursor: pointer; font-size: 10px; }
 .panel-nav button svg { width: 23px; height: 23px; stroke-width: 2; }
 .panel-nav button.active { color: #b96e2d; background: #f6ead1; }
+.panel-nav button:hover { color: #796854; background: rgba(246,234,209,.55); }
 
 .reduced-motion *,
 .reduced-motion *::before,
