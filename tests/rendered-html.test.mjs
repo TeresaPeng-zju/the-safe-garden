@@ -91,3 +91,9 @@ test("the help scene places the child beside the listening adult", async () => {
   assert.match(styles, /\.fox-help img \{ left: -200%; top: -100%; \}/);
   assert.match(styles, /\.parent-character\.is-near-fox/);
 });
+
+test("calm mode stops motion instead of accelerating infinite animation", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.reduced-motion \*::after \{ animation: none !important; transition: none !important;/);
+  assert.doesNotMatch(styles, /\.reduced-motion \*::after \{[^}]*animation-duration:\s*\.01ms/s);
+});

@@ -579,7 +579,7 @@ button { color: inherit; }
 
 .reduced-motion *,
 .reduced-motion *::before,
-.reduced-motion *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+.reduced-motion *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 
 @keyframes seedPulse { to { transform: scale(1.35); opacity: .45; } }
 @keyframes flowerPop { 0% { transform: scale(.35); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -648,5 +648,5 @@ button { color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
