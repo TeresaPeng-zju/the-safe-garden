@@ -97,6 +97,17 @@ test("a bounded agent can adapt parent wording but cannot change factual observa
   assert.equal(result.observation, fallback.observation);
 });
 
+test("reviewed coaching stays factual for partial records and adapts to support style", () => {
+  const full = createPracticeRecord(completeJourney("space"), undefined, { supportMode: "model-first" });
+  assert.match(buildReviewedCoachCard(full, "zh").nextFocus, /家长先示范/);
+
+  const partial = { ...full, events: full.events.filter((event) => event.action === "step-back") };
+  const card = buildReviewedCoachCard(partial, "zh");
+  assert.match(card.observation, /1 个已练习的安全动作/);
+  assert.doesNotMatch(card.observation, /离开并向可信赖的大人求助/);
+  assert.match(card.nextFocus, /清楚地说/);
+});
+
 test("every journey node and coach card includes Traditional Chinese", () => {
   for (const node of hugBoundaryJourney) {
     assert.ok(node.text["zh-TW"], `${node.id} should include Traditional Chinese text`);

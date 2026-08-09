@@ -845,6 +845,7 @@ export default function Home() {
   useEffect(() => {
     if (!hydrated) return;
     window.localStorage.setItem("safe-garden-language", language);
+    document.documentElement.lang = language === "zh" ? "zh-CN" : language === "zh-TW" ? "zh-TW" : "en";
   }, [language, hydrated]);
 
   useEffect(() => {
@@ -1348,6 +1349,10 @@ for (const record of records) {
   <section className="panel-view about-view" aria-labelledby="about-title">
          <p className="panel-eyebrow">{aboutContent[language].eyebrow}</p>
           <h2 id="about-title">{aboutContent[language].title}</h2>
+          <div className="origin-card">
+            <strong>{aboutContent[language].originTitle}</strong>
+            <p>{aboutContent[language].originStory}</p>
+          </div>
      <ul className="about-list">
     <li><UserRoundCheck aria-hidden="true" /><span>{aboutContent[language].forWho}</span></li>
               <li><Heart aria-hidden="true" /><span>{aboutContent[language].needs}</span></li>

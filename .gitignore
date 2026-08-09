@@ -37,10 +37,12 @@ yarn-error.log*
 
 # typescript
 next-env.d.ts
+*.tsbuildinfo
 /dist/
 /.wrangler/
 /outputs/
 /work/
+/the-safe-garden-submission*.zip
 
 # Original working assets are preserved locally. Web-ready copies live in public/assets.
 /assets/

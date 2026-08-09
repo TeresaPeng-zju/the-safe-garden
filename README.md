@@ -2,6 +2,8 @@
 
 A low-pressure parent-and-child exploration game for body boundaries, communication, and everyday safety. The first journey follows a named fox through a park treasure hunt, a consent-and-safety story, a short sequence of concrete actions, and a child-chosen planting moment. The experience ends with a factual parent coaching card and a persistent family garden.
 
+It began with Xiaoshu (a pseudonym), an autistic primary-school child the creator met while volunteering. After he stepped back from an unwanted hug but could not quickly explain it in words, repeated verbal teaching became a test. The product turns that specific need into concrete, visual, repeatable practice without scoring the child.
+
 ## Included in this version
 
 - English, Simplified Chinese, and Traditional Chinese content
@@ -14,6 +16,7 @@ A low-pressure parent-and-child exploration game for body boundaries, communicat
 - Calm mode, reduced motion, optional background music, and first-time character naming
 - Device-local preferences, including saved discoveries and a non-overlapping family garden
 - Optional server-side DeepSeek adaptation for parent wording with a reviewed offline fallback
+- Public Streamable HTTP MCP endpoint with one typed, bounded coaching tool at `/api/mcp`
 - Social sharing metadata and artwork
 
 ## Run locally

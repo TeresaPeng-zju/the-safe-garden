@@ -2,13 +2,15 @@
 
 ## One-line pitch
 
-The Safe Garden is a low-pressure exploration game where autistic children and their parents rehearse consent, clear boundaries, leaving, and asking a trusted adult for help — then grow a persistent family garden together. The child never receives a score; a flower simply records that the family practiced.
+The Safe Garden｜给自闭症孩子的边界练习花园，是从小树（化名）的一次真实困境出发，为更容易理解图片与具体动作的孩子和家长设计的不评分边界练习。孩子练习表达意愿、后退、离开和求助；一朵花只记录“我们一起练习过”，从不记录分数。
 
 ## Problem → User → Solution → Charitable value
 
-**Problem.** Most personal-safety guidance for children is abstract, verbal, and one-size-fits-all. It often turns practice into a test, rewards compliance, and asks children to keep explaining or confronting. For many autistic children this is overwhelming and counter-productive: the format itself becomes a barrier before any safety idea lands.
+**Demand origin.** The creator met Xiaoshu (a pseudonym), an autistic primary-school child, while volunteering at a school for children with additional needs. In one family-hug situation he visibly stepped back but could not quickly explain it in words. The later verbal explanation soon became a question-and-answer test, and he refused to continue. His parent also had no reliable way to know what he understood or how to explain it without testing him.
 
-**User.** Autistic children who value concrete, visual, repeatable practice and predictable pacing — and the parents and carers who practice with them. The prototype speaks English, Simplified Chinese, and Traditional Chinese so Hong Kong families can use it in their own language.
+**Problem.** Most personal-safety guidance for children is abstract, verbal, and one-size-fits-all. It often turns practice into a test, rewards compliance, and asks children to keep explaining or confronting. For Xiaoshu, the format itself became the barrier before the safety idea could land.
+
+**User.** It starts with Xiaoshu and his parent, then extends to autistic children with similar picture-cue, concrete-action and predictable-pacing needs — and the adults who practice alongside them. The prototype speaks English, Simplified Chinese, and Traditional Chinese.
 
 **Solution.** One short, complete park journey that is playable in about two to three minutes:
 
@@ -61,21 +63,20 @@ Open the parent panel: the factual observation, the live AI source label, the on
 
 "Every child learns differently and every parent teaches differently. The Safe Garden helps each family find a concrete, respectful way to practice together."
 
-## Self-assessment (post-polish)
+## Evidence mapped to the judging criteria
 
-| Judging area | Before | After | What changed |
-| --- | --- | --- | --- |
-| Theme fit | 9.5 | 10 | Trilingual parent-side "About / design principles" panel states who it serves and why, without labelling the child in the game. |
-| Completeness | 9 | 9.5 | Persisted discoveries, non-overlapping garden placement, trilingual sound label, real show-first demonstration, clear collection feedback. |
-| Innovation | 9 | 9.5 | Visible boundary card and live AI-source states make the constrained two-sided loop demonstrable. |
-| Game feel | 8.5 | 9.5 | Optional non-scored butterfly moment, restrained world feedback, keyboard/touch/mouse hold action, calm-mode-safe demonstration. |
-| Safety & responsible AI | 9 | 10 | Same-origin + size limit + whitelist + no-store, hardened field-picking so AI can never overwrite the observation, plus dedicated automated tests. |
+| Judging area | Evidence in the working product |
+| --- | --- |
+| Insight & understanding | The parent-only About panel names Xiaoshu (pseudonym), the observed hug situation, why verbal teaching became a test, and the resulting design constraints. |
+| Creative translation & experience | A complete non-chatbot loop: explore → choose consent → rehearse four embodied actions → see repair and adult support → choose a planting place → receive parent guidance. Three support styles change presentation without changing the safety conclusion. |
+| Real use & completeness | Practice history and the garden persist on the device; both consent branches reach the same complete safety plan; every transition is tested. Actual target-user feedback must be added after a consented session and is never fabricated in this repository. |
+| Technical connectivity | A typed state machine owns child safety, an optional constrained model adapts only three parent-facing fields, unsafe output falls back, and a public Streamable HTTP MCP tool exposes the same bounded coaching capability. |
 
 ## Submission checklist
 
 - CodeBuddy checkpoints captured: `pre-codebuddy-competition-polish` and `codebuddy-competition-ready`.
-- `npm test` passes in CodeBuddy (34 tests).
-- `npm run lint` reports 0 errors.
-- Cloud Studio public link verified in a fresh browser.
-- DeepSeek server secret configured, then fallback also verified without it.
+- Run `npm test`, `npm run lint`, `npx tsc --noEmit`, and `npm run build:vercel` immediately before submission; record the current passing count in the final form.
+- Verify the Vercel experience link and `/api/mcp` initialize → tools/list → tools/call sequence from a fresh connection.
+- Configure `DEEPSEEK_API_KEY` in production only after explicit authorization; without it, the reviewed fallback remains complete and the UI labels it honestly.
+- Complete one consented target-user session, record specific observed behaviour and one resulting iteration, and obtain permission before using any quote, image, or story detail.
 - A backup screen recording and screenshots are kept in case the temporary link or venue network fails.

@@ -128,6 +128,7 @@ test("the request sanitizer drops identifying data and keeps only whitelisted fi
   // Only whitelisted semantic actions survive, capped at four.
   assert.ok(sanitized.actions.every((action) => ["step-back", "repeat-boundary", "leave", "seek-help"].includes(action)));
   assert.ok(sanitized.actions.length <= 4);
+  assert.equal(new Set(sanitized.actions).size, sanitized.actions.length);
   assert.ok(!JSON.stringify(sanitized).includes("Real Name"));
   assert.ok(!JSON.stringify(sanitized).includes("private disclosure"));
 });

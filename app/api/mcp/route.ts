@@ -54,7 +54,13 @@ function makeCompletedRecord(practice: SanitizedCoachRequest): PracticeRecord {
     contentVersion: "park-bubble-v1.2",
     completedAt: new Date().toISOString(),
     initialConsent: practice.initialConsent,
-    events: [],
+    events: practice.actions.map((action, index) => ({
+      id: `mcp-action-${index + 1}`,
+      nodeId: action,
+      actor: "player",
+      action,
+      occurredAt: "anonymous-practice",
+    })),
     supportMode: practice.supportMode,
   };
 }
@@ -106,13 +112,32 @@ async function handleMcpRequest(request: Request): Promise<Response> {
     );
   }
 
+  let parsedBody: unknown;
+  if (request.method === "POST") {
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_MCP_BODY_BYTES) {
+      return Response.json(
+        { jsonrpc: "2.0", error: { code: -32600, message: "Request body too large" }, id: null },
+        { status: 413, headers: corsHeaders },
+      );
+    }
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch {
+      return Response.json(
+        { jsonrpc: "2.0", error: { code: -32700, message: "Parse error" }, id: null },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+  }
+
   const server = createSafeGardenMcpServer();
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
   await server.connect(transport);
-  const response = await transport.handleRequest(request);
+  const response = await transport.handleRequest(request, { parsedBody });
   const headers = new Headers(response.headers);
   for (const [key, value] of Object.entries(corsHeaders)) headers.set(key, value);
   return new Response(response.body, {

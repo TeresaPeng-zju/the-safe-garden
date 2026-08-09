@@ -359,37 +359,100 @@ export function savePracticeRecord(records: PracticeRecord[], record: PracticeRe
 
 const evaluativeTerms = /\b(score|correct|incorrect|passed|failed|ability|mastered|good child|bad child)\b|得分|答对|答错|通过|失败|能力|掌握|答對|答錯|通過|失敗|掌握|乖|不乖/iu;
 
+const coachingActionOrder = ["step-back", "repeat-boundary", "leave", "seek-help"] as const;
+type CoachingAction = (typeof coachingActionOrder)[number];
+
+const nextActionLabels: Record<Language, Record<CoachingAction, string>> = {
+  en: {
+    "step-back": "taking one step back to make room",
+    "repeat-boundary": "using the clear words “No. Please stop.”",
+    leave: "leaving without having to keep explaining",
+    "seek-help": "going to a trusted adult and asking for help",
+  },
+  zh: {
+    "step-back": "后退一步，给自己留出空间",
+    "repeat-boundary": "清楚地说“不要，请停下来”",
+    leave: "不必继续解释，直接离开",
+    "seek-help": "走向可信赖的大人并请求帮助",
+  },
+  "zh-TW": {
+    "step-back": "後退一步，為自己留出空間",
+    "repeat-boundary": "清楚地說「不要，請停下來」",
+    leave: "不必繼續解釋，直接離開",
+    "seek-help": "走向可信賴的大人並請求幫助",
+  },
+};
+
+const observationActionLabels: Record<Language, Record<CoachingAction, string>> = {
+  en: { "step-back": "stepping back", "repeat-boundary": "saying no clearly", leave: "leaving", "seek-help": "asking a trusted adult for help" },
+  zh: { "step-back": "后退", "repeat-boundary": "清楚说不要", leave: "离开", "seek-help": "向可信赖的大人求助" },
+  "zh-TW": { "step-back": "後退", "repeat-boundary": "清楚說不要", leave: "離開", "seek-help": "向可信賴的大人求助" },
+};
+
+function completedCoachingActions(record: PracticeRecord): CoachingAction[] {
+  const completed = new Set(record.events.map((event) => event.action));
+  return coachingActionOrder.filter((action) => completed.has(action));
+}
+
+function nextPractice(language: Language, record: PracticeRecord, completed: CoachingAction[]): string {
+  const missing = coachingActionOrder.find((action) => !completed.includes(action));
+
+  if (missing) {
+    if (language === "zh") return `下一次只练习一个小步骤：${nextActionLabels.zh[missing]}。`;
+    if (language === "zh-TW") return `下一次只練習一個小步驟：${nextActionLabels["zh-TW"][missing]}。`;
+    return `Next time, practice one small step: ${nextActionLabels.en[missing]}.`;
+  }
+  if (record.supportMode === "picture") {
+    if (language === "zh") return "下次可以用照片指认家里或学校中两位可以求助的大人。";
+    if (language === "zh-TW") return "下次可以用照片指認家裡或學校中兩位可以求助的大人。";
+    return "Next time, use photos to point to two trusted adults at home or school.";
+  }
+  if (record.supportMode === "model-first") {
+    if (language === "zh") return "下次可以由家长先示范一次走向可信赖大人求助，再邀请孩子按自己的方式尝试。";
+    if (language === "zh-TW") return "下次可以由家長先示範一次走向可信賴大人求助，再邀請孩子按自己的方式嘗試。";
+    return "Next time, let the parent model asking a trusted adult for help, then invite the child to try in their own way.";
+  }
+  if (language === "zh") return "下次可以继续练习：先辨认家里或学校中可以求助的两位大人。";
+  if (language === "zh-TW") return "下次可以繼續練習：先辨認家裡或學校中可以求助的兩位大人。";
+  return "Next time, identify two trusted adults at home or school who can help.";
+}
+
 export function buildReviewedCoachCard(record: PracticeRecord, language: Language): CoachCard {
   const accepted = record.initialConsent === "accept";
+  const completed = completedCoachingActions(record);
+  const hasFullSafetySequence = completed.length === coachingActionOrder.length;
   if (language === "zh") {
     return {
-      observation: accepted
+      observation: hasFullSafetySequence ? (accepted
         ? "小狐狸一开始选择接受拥抱，小狗回应了这个选择。之后的练习中，小狗再次靠近且没有马上停下；小狐狸后退、清楚说不要、离开并向可信赖的大人求助。小狗随后停下并道歉，大人听完后陪在小狐狸身边。"
-        : "小狐狸一开始选择需要空间，小狗回应了这个选择。之后的练习中，小狗再次靠近且没有马上停下；小狐狸后退、清楚说不要、离开并向可信赖的大人求助。小狗随后停下并道歉，大人听完后陪在小狐狸身边。",
+        : "小狐狸一开始选择需要空间，小狗回应了这个选择。之后的练习中，小狗再次靠近且没有马上停下；小狐狸后退、清楚说不要、离开并向可信赖的大人求助。小狗随后停下并道歉，大人听完后陪在小狐狸身边。")
+        : `这次匿名记录包含 ${completed.length} 个已练习的安全动作：${completed.length ? completed.map((action) => observationActionLabels.zh[action]).join("、") : "暂未记录具体动作"}。这里不根据动作数量评分。`,
       tonightPrompt: "“如果你说了不要，对方还是没有停下来，你可以去找谁？”",
       parentReply: "家长可以回应：“谢谢你告诉我。我相信你，也会和你一起想办法。”",
-      nextFocus: "下次可以继续练习：先辨认家里或学校中可以求助的两位大人。",
+      nextFocus: nextPractice(language, record, completed),
       source: "reviewed-template",
     };
   }
   if (language === "zh-TW") {
     return {
-      observation: accepted
+      observation: hasFullSafetySequence ? (accepted
         ? "小狐狸一開始選擇接受擁抱，小狗回應了這個選擇。之後的練習中，小狗再次靠近且沒有馬上停下；小狐狸後退、清楚說不要、離開並向可信賴的大人求助。小狗隨後停下並道歉，大人聽完後陪在小狐狸身邊。"
-        : "小狐狸一開始選擇需要空間，小狗回應了這個選擇。之後的練習中，小狗再次靠近且沒有馬上停下；小狐狸後退、清楚說不要、離開並向可信賴的大人求助。小狗隨後停下並道歉，大人聽完後陪在小狐狸身邊。",
+        : "小狐狸一開始選擇需要空間，小狗回應了這個選擇。之後的練習中，小狗再次靠近且沒有馬上停下；小狐狸後退、清楚說不要、離開並向可信賴的大人求助。小狗隨後停下並道歉，大人聽完後陪在小狐狸身邊。")
+        : `這次匿名記錄包含 ${completed.length} 個已練習的安全動作：${completed.length ? completed.map((action) => observationActionLabels["zh-TW"][action]).join("、") : "暫未記錄具體動作"}。這裡不根據動作數量評分。`,
       tonightPrompt: "「如果你說了不要，對方還是沒有停下來，你可以去找誰？」",
       parentReply: "家長可以回應：「謝謝你告訴我。我相信你，也會和你一起想辦法。」",
-      nextFocus: "下次可以繼續練習：先辨認家裡或學校中可以求助的兩位大人。",
+      nextFocus: nextPractice(language, record, completed),
       source: "reviewed-template",
     };
   }
   return {
-    observation: accepted
+    observation: hasFullSafetySequence ? (accepted
       ? "Little Fox first chose a hug, and Puppy acknowledged that choice. Later in the practice, Puppy came close again and did not stop right away. Little Fox stepped back, said no clearly, left, and asked a trusted adult for help. Puppy then stopped and apologized, and the adult listened and stayed with Little Fox."
-      : "Little Fox first chose more space, and Puppy acknowledged that choice. Later in the practice, Puppy came close again and did not stop right away. Little Fox stepped back, said no clearly, left, and asked a trusted adult for help. Puppy then stopped and apologized, and the adult listened and stayed with Little Fox.",
+      : "Little Fox first chose more space, and Puppy acknowledged that choice. Later in the practice, Puppy came close again and did not stop right away. Little Fox stepped back, said no clearly, left, and asked a trusted adult for help. Puppy then stopped and apologized, and the adult listened and stayed with Little Fox.")
+      : `This anonymous record contains ${completed.length} practiced safety ${completed.length === 1 ? "action" : "actions"}: ${completed.length ? completed.map((action) => observationActionLabels.en[action]).join(", ") : "no specific actions recorded yet"}. Action counts are never used as a score.`,
     tonightPrompt: "“If you say no and someone still does not stop, who could you go to for help?”",
     parentReply: "You can respond: “Thank you for telling me. I believe you, and we can decide what to do together.”",
-    nextFocus: "Next time, identify two trusted adults at home or school who can help.",
+    nextFocus: nextPractice(language, record, completed),
     source: "reviewed-template",
   };
 }
@@ -430,6 +493,8 @@ export function applyConstrainedAgentEnhancement(
 export type AboutContent = {
   eyebrow: string;
   title: string;
+  originTitle: string;
+  originStory: string;
   forWho: string;
   needs: string;
   practiceNotAssessment: string;
@@ -446,6 +511,8 @@ export const aboutContent: Record<Language, AboutContent> = {
   en: {
     eyebrow: "About this practice",
     title: "Made for families who practice together",
+    originTitle: "It began with one child",
+    originStory: "The Safe Garden began with Xiaoshu (a pseudonym), an autistic primary-school child the creator met while volunteering. When a relative moved in for a hug, he stepped back but could not quickly explain it in words. Repeated verbal teaching soon felt like a test. This is the concrete, visual, repeatable practice we wished he and his family had in that moment.",
     forWho: "This is for families who prefer concrete, visual, repeatable practice rather than abstract talks.",
     needs: "It was shaped with the different language, reading, picture-cue, and pacing needs that many autistic children value in mind.",
 practiceNotAssessment: "It offers practice support. It does not assess, diagnose, or measure a child’s ability.",
@@ -458,6 +525,8 @@ safetyTitle: "How safety and AI work here",
   zh: {
     eyebrow: "关于这次练习",
     title: "为一起练习的家庭而做",
+    originTitle: "它从一个具体的孩子开始",
+    originStory: "The Safe Garden 从小树（化名）开始。他是创作者做公益时认识的一名小学阶段自闭症儿童。一次亲友想拥抱他时，他明显后退，却来不及用语言说明；事后的反复口头讲解又很快变成了问答测试。这正是当时希望能送给他和家人的那段具体、视觉化、可重复且不评分的练习。",
     forWho: "这适合更偏好具体、视觉化、可重复练习方式的家庭，而不是抽象的说教。",
     needs: "设计时特别考虑了许多自闭症儿童所看重的、不同的语言、阅读、图片提示与节奏需求。",
     practiceNotAssessment: "它提供的是练习支持，不进行诊断，也不评估孩子的能力。",
@@ -470,6 +539,8 @@ safetyTitle: "How safety and AI work here",
   "zh-TW": {
     eyebrow: "關於這次練習",
     title: "為一起練習的家庭而做",
+    originTitle: "它從一個具體的孩子開始",
+    originStory: "The Safe Garden 從小樹（化名）開始。他是創作者做公益時認識的一名小學階段自閉症兒童。一次親友想擁抱他時，他明顯後退，卻來不及用語言說明；事後反覆的口頭講解又很快變成了問答測試。這正是當時希望能送給他和家人的那段具體、視覺化、可重複且不評分的練習。",
     forWho: "這適合更偏好具體、視覺化、可重複練習方式的家庭，而不是抽象的說教。",
     needs: "設計時特別考慮了許多自閉症兒童所看重的、不同的語言、閱讀、圖片提示與節奏需求。",
     practiceNotAssessment: "它提供的是練習支持，不進行診斷，也不評估孩子的能力。",
@@ -522,7 +593,7 @@ export function sanitizeCoachRequest(value: CoachRequestInput): SanitizedCoachRe
   const actions = Array.isArray(value.actions)
     ? value.actions.filter((item): item is SemanticAction => (
       typeof item === "string" && coachAllowedActions.has(item as SemanticAction)
-    )).slice(0, 4)
+    )).filter((item, index, all) => all.indexOf(item) === index).slice(0, 4)
     : [];
   return { language, supportMode, initialConsent, actions };
 }

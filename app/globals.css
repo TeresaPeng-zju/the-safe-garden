@@ -781,6 +781,9 @@ button { color: inherit; }
 .model-first-action.is-demonstrating .demo-icon { animation: demoSlide 1.4s ease-in-out; }
 
 .about-view .about-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; }
+.origin-card { padding: 15px; border: 1px solid rgba(177,125,72,.2); border-radius: 20px; background: linear-gradient(145deg, rgba(255,248,232,.96), rgba(246,237,215,.82)); color: #67523e; }
+.origin-card strong { display: block; margin-bottom: 7px; font-family: Georgia, "Songti SC", serif; font-size: 15px; color: #4e6040; }
+.origin-card p { margin: 0; font-size: 12px; line-height: 1.7; }
 .about-view .about-list li { display: grid; grid-template-columns: 34px 1fr; gap: 11px; align-items: start; padding: 12px 13px; border: 1px solid rgba(151,119,72,.13); border-radius: 17px; background: rgba(255,252,244,.78); color: #6d5a45; font-size: 12px; line-height: 1.55; }
 .about-view .about-list svg { width: 20px; height: 20px; padding: 6px; border-radius: 11px; background: #e8edcf; color: var(--sage); box-sizing: content-box; }
 .safety-flow-card { margin-top: 4px; padding: 15px; border: 1px solid rgba(112,134,79,.2); border-radius: 20px; background: linear-gradient(150deg, rgba(240,244,222,.92), rgba(232,239,207,.7)); }

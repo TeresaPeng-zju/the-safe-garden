@@ -20,7 +20,7 @@ test("server-renders The Safe Garden experience", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>The Safe Garden — Practice brave words together<\/title>/i);
+  assert.match(html, /<title>The Safe Garden｜给自闭症孩子的边界练习花园<\/title>/i);
   assert.match(html, /The Safe Garden/);
   assert.match(html, /Explore the park, collect two small treasures/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
@@ -51,6 +51,15 @@ test("ships optimized game assets and social metadata", async () => {
   assert.ok(dog.size < 5_000_000, "dog sprite sheet should remain web-sized");
 });
 
+test("ships explicit browser and touch favicons", async () => {
+  const layoutSource = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  assert.match(layoutSource, /icons:\s*\{/);
+  assert.match(layoutSource, /\/favicon\.ico/);
+  assert.match(layoutSource, /\/favicon-32x32\.png/);
+  assert.match(layoutSource, /\/favicon-16x16\.png/);
+  assert.match(layoutSource, /\/apple-touch-icon\.png/);
+});
+
 test("uses artwork and icon components instead of emoji UI", async () => {
   const [pageSource, styles] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -76,6 +85,14 @@ test("parent navigation and family settings are functional", async () => {
   assert.match(pageSource, /"model-first"/);
   assert.match(pageSource, /records\.map\(\(record, index\)/);
   assert.match(styles, /\.panel-nav\s*\{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/s);
+});
+
+test("the parent-only about panel names the concrete person and observed need", async () => {
+  const journeySource = await readFile(new URL("../lib/journey.ts", import.meta.url), "utf8");
+  assert.match(journeySource, /小树（化名）/);
+  assert.match(journeySource, /明显后退/);
+  assert.match(journeySource, /问答测试/);
+  assert.match(journeySource, /具体、视觉化、可重复且不评分/);
 });
 
 test("the finished game loop includes exploration, physical actions, and garden placement", async () => {

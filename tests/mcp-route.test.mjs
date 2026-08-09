@@ -73,3 +73,34 @@ test("MCP tools/call returns a complete reviewed fallback without an API key", a
   assert.ok(payload.result.structuredContent.parentReply);
   assert.ok(payload.result.structuredContent.nextFocus);
 });
+
+test("MCP coaching never invents unrecorded actions", async () => {
+  const response = await mcpRequest({
+    jsonrpc: "2.0",
+    id: 4,
+    method: "tools/call",
+    params: {
+      name: "create_parent_coaching_card",
+      arguments: { language: "zh", actions: ["step-back"] },
+    },
+  });
+  const payload = await response.json();
+  assert.match(payload.result.structuredContent.observation, /1 个已练习的安全动作/);
+  assert.doesNotMatch(payload.result.structuredContent.observation, /离开并向可信赖的大人求助/);
+});
+
+test("MCP rejects malformed and oversized bodies before the SDK parses them", async () => {
+  const malformed = await POST(new Request(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{not-json",
+  }));
+  assert.equal(malformed.status, 400);
+
+  const oversized = await POST(new Request(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ padding: "x".repeat(13_000) }),
+  }));
+  assert.equal(oversized.status, 413);
+});
