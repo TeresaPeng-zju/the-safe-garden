@@ -1,14 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
-import { requestCoachAgent } from "../../lib/coach-agent.ts";
+import { requestCoachAgent } from "../../../lib/coach-agent.ts";
 import {
   applyConstrainedAgentEnhancement,
   buildReviewedCoachCard,
   sanitizeCoachRequest,
   type PracticeRecord,
   type SanitizedCoachRequest,
-} from "../../lib/journey.ts";
+} from "../../../lib/journey.ts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

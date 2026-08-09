@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { POST } from "../app/mcp/route.ts";
+import { POST } from "../app/api/mcp/route.ts";
 
-const endpoint = "https://safe-garden.example/mcp";
+const endpoint = "https://safe-garden.example/api/mcp";
 
 async function mcpRequest(body) {
   return POST(new Request(endpoint, {
