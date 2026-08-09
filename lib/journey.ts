@@ -414,7 +414,144 @@ export function applyConstrainedAgentEnhancement(
   candidate?: AgentCoachEnhancement | null,
 ): CoachCard {
   if (!isSafeCoachEnhancement(candidate)) return fallback;
-  return { ...fallback, ...candidate, source: "constrained-agent" };
+  // Explicitly pick only the three parent-facing fields. The factual
+  // observation and every other field always come from the reviewed template,
+  // so a model can never overwrite the objective record even if it returns
+  // extra keys.
+  return {
+    ...fallback,
+    tonightPrompt: candidate.tonightPrompt,
+    parentReply: candidate.parentReply,
+    nextFocus: candidate.nextFocus,
+    source: "constrained-agent",
+  };
+}
+
+export type AboutContent = {
+  eyebrow: string;
+  title: string;
+  forWho: string;
+  needs: string;
+  practiceNotAssessment: string;
+  alongside: string;
+  safetyTitle: string;
+  safetyEngine: string;
+  safetyWording: string;
+  safetyFallback: string;
+};
+
+// A restrained parent-side explanation of who this supports and why.
+// It never appears in the child game and never labels the child.
+export const aboutContent: Record<Language, AboutContent> = {
+  en: {
+    eyebrow: "About this practice",
+    title: "Made for families who practice together",
+    forWho: "This is for families who prefer concrete, visual, repeatable practice rather than abstract talks.",
+    needs: "It was shaped with the different language, reading, picture-cue, and pacing needs that many autistic children value in mind.",
+practiceNotAssessment: "It offers practice support. It does not assess, diagnose, or measure a child’s ability.",
+    alongside: "Use it alongside your child’s own way of communicating and any professional support you already have.",
+safetyTitle: "How safety and AI work here",
+    safetyEngine: "A reviewed rule engine owns the child story, safety steps, and the factual record. It always runs, with or without AI.",
+    safetyWording: "The optional AI can only soften the parent wording — one question, one reply, one small next step.",
+ safetyFallback: "Anything unsafe, slow, or malformed falls back to the reviewed offline template automatically.",
+  },
+  zh: {
+    eyebrow: "关于这次练习",
+    title: "为一起练习的家庭而做",
+    forWho: "这适合更偏好具体、视觉化、可重复练习方式的家庭，而不是抽象的说教。",
+    needs: "设计时特别考虑了许多自闭症儿童所看重的、不同的语言、阅读、图片提示与节奏需求。",
+    practiceNotAssessment: "它提供的是练习支持，不进行诊断，也不评估孩子的能力。",
+    alongside: "请结合孩子自己的沟通方式，以及你已经在使用的专业支持一起使用。",
+    safetyTitle: "这里的安全与 AI 如何运作",
+    safetyEngine: "经过审核的规则引擎负责儿童剧情、安全步骤和客观记录。无论有没有 AI，它都能完整运行。",
+    safetyWording: "可选的 AI 只能调整家长端的措辞——一个问题、一句回应、一个很小的下一步。",
+    safetyFallback: "任何不安全、超时或格式错误的输出，都会自动退回到经过审核的离线模板。",
+  },
+  "zh-TW": {
+    eyebrow: "關於這次練習",
+    title: "為一起練習的家庭而做",
+    forWho: "這適合更偏好具體、視覺化、可重複練習方式的家庭，而不是抽象的說教。",
+    needs: "設計時特別考慮了許多自閉症兒童所看重的、不同的語言、閱讀、圖片提示與節奏需求。",
+    practiceNotAssessment: "它提供的是練習支持，不進行診斷，也不評估孩子的能力。",
+    alongside: "請結合孩子自己的溝通方式，以及你已經在使用的專業支持一起使用。",
+    safetyTitle: "這裡的安全與 AI 如何運作",
+    safetyEngine: "經過審核的規則引擎負責兒童劇情、安全步驟和客觀記錄。無論有沒有 AI，它都能完整運行。",
+    safetyWording: "可選的 AI 只能調整家長端的措辭——一個問題、一句回應、一個很小的下一步。",
+    safetyFallback: "任何不安全、逾時或格式錯誤的輸出，都會自動退回到經過審核的離線範本。",
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Constrained coach request handling (shared by the API route so the exact
+// same anonymization and abuse guards can be unit tested without Next.js).
+// ---------------------------------------------------------------------------
+
+export const MAX_COACH_BODY_BYTES = 2_000;
+
+const coachAllowedActions = new Set<SemanticAction>([
+  "step-back",
+  "repeat-boundary",
+  "leave",
+  "seek-help",
+]);
+
+export type CoachRequestInput = {
+  language?: unknown;
+  supportMode?: unknown;
+  initialConsent?: unknown;
+  actions?: unknown;
+};
+
+export type SanitizedCoachRequest = {
+  language: Language;
+  supportMode: SupportMode;
+  initialConsent: JourneyChoice["id"] | null;
+  actions: SemanticAction[];
+};
+
+// Reduce any incoming body to a small, anonymous, whitelisted structure.
+// No names, free text, or identifying fields can survive this step.
+export function sanitizeCoachRequest(value: CoachRequestInput): SanitizedCoachRequest {
+  const language: Language = value.language === "zh" || value.language === "zh-TW" ? value.language : "en";
+  const supportMode: SupportMode = value.supportMode === "picture" || value.supportMode === "model-first"
+    ? value.supportMode
+    : "standard";
+  const initialConsent = value.initialConsent === "accept" || value.initialConsent === "space"
+    ? value.initialConsent
+    : null;
+  const actions = Array.isArray(value.actions)
+    ? value.actions.filter((item): item is SemanticAction => (
+      typeof item === "string" && coachAllowedActions.has(item as SemanticAction)
+    )).slice(0, 4)
+    : [];
+  return { language, supportMode, initialConsent, actions };
+}
+
+// Lightweight same-origin abuse guard suitable for this prototype. A foreign
+// Origin/Referer is rejected; a missing one (same-origin fetch in some
+// runtimes) is allowed. Returns true when the request may proceed.
+export function isSameOriginRequest(headers: {
+  host?: string | null;
+  origin?: string | null;
+  referer?: string | null;
+}): boolean {
+  const host = headers.host;
+  if (!host) return false;
+  if (headers.origin) {
+    try {
+      return new URL(headers.origin).host === host;
+    } catch {
+      return false;
+    }
+  }
+  if (headers.referer) {
+    try {
+      return new URL(headers.referer).host === host;
+    } catch {
+      return false;
+    }
+  }
+  return true;
 }
 
 export const semanticPresentationMap: Partial<Record<SemanticAction, string>> = {

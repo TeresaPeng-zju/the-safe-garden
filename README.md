@@ -6,12 +6,13 @@ A low-pressure parent-and-child exploration game for body boundaries, communicat
 
 - English, Simplified Chinese, and Traditional Chinese content
 - Responsive child journey and parent coaching panel
+- A trilingual, parent-side "About this practice" panel that explains who the product serves without labelling the child in the game
 - Illustrated 2D character poses with calm, low-stimulation motion over a storybook park
-- A complete game loop: explore, collect, interact, act, plant, and return
+- A complete game loop: explore, collect, an optional non-scored butterfly moment, interact, act, plant, and return
 - Consent and safety practice with non-punitive feedback
-- Three support styles: words + icons, larger pictures, and show-first prompting
+- Three support styles: words + icons, larger pictures, and show-first with a calm demonstration before each action
 - Calm mode, reduced motion, optional background music, and first-time character naming
-- Device-local preferences
+- Device-local preferences, including saved discoveries and a non-overlapping family garden
 - Optional server-side DeepSeek adaptation for parent wording with a reviewed offline fallback
 - Social sharing metadata and artwork
 
@@ -42,4 +43,6 @@ For the competition handoff, see `docs/CODEBUDDY_HANDOFF.md` and `docs/SUBMISSIO
 
 ## Product safety boundary
 
-This prototype supports guided practice. It does not assess, diagnose, investigate disclosures, or determine whether a child has mastered a safety skill. Child-facing scenario text remains reviewed and deterministic. The optional model can only adapt three parent-facing fields, and rejected, unavailable, or slow output falls back to reviewed local guidance.
+This prototype supports guided practice. It does not assess, diagnose, investigate disclosures, or determine whether a child has mastered a safety skill. Child-facing scenario text remains reviewed and deterministic.
+
+The optional model can only adapt three parent-facing fields — `tonightPrompt`, `parentReply`, and `nextFocus`. The factual `observation` always comes from the reviewed template and can never be overwritten, even by a response that returns extra keys. The DeepSeek key is read only from `process.env.DEEPSEEK_API_KEY` on the server, is never exposed with a `NEXT_PUBLIC_` prefix, and is never sent to or logged on the client. Each request is same-origin checked, size-limited, and reduced to an anonymous whitelist (language, support style, initial consent choice, and practiced semantic actions) — no names, contact details, or free text are ever sent. Rejected, unavailable, slow, or malformed output falls back to reviewed local guidance, and children never interact with an open-ended chatbot.

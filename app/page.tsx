@@ -13,6 +13,7 @@ import {
   Hand,
   Heart,
   Home as HomeIcon,
+  Info,
   Lightbulb,
   Lock,
   Map,
@@ -29,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  aboutContent,
   advanceJourney,
   applyConstrainedAgentEnhancement,
   buildReviewedCoachCard,
@@ -50,13 +52,14 @@ import {
   type CoachCard,
 } from "../lib/journey";
 
-type PanelView = "home" | "journey" | "garden" | "notes";
+type PanelView = "home" | "journey" | "garden" | "notes" | "about";
 type GamePhase = "welcome" | "explore" | "journey" | "plant" | "complete";
 type AgentStatus = "idle" | "loading" | "adapted" | "fallback";
 
 const SUPPORT_MODE_STORAGE_KEY = "safe-garden-support-mode";
 const MUSIC_STORAGE_KEY = "safe-garden-music";
 const PLAYER_NAME_STORAGE_KEY = "safe-garden-player-name";
+const DISCOVERIES_STORAGE_KEY = "safe-garden-discoveries";
 
 const baseCopy = {
   en: {
@@ -84,6 +87,8 @@ const baseCopy = {
     journey: "Journey",
     garden: "Garden",
     notes: "Notes",
+    about: "About",
+    safetyCardTitle: "Safety and AI",
     progressHome: "Explore",
     progressPark: "Consent",
     progressPractice: "Safety plan",
@@ -172,6 +177,8 @@ const baseCopy = {
     journey: "旅程",
     garden: "花园",
     notes: "记录",
+    about: "关于",
+    safetyCardTitle: "安全与 AI",
     progressHome: "探索",
     progressPark: "表达意愿",
     progressPractice: "安全计划",
@@ -263,8 +270,10 @@ const copy = {
     practicesRecorded: (count: number) => `這台裝置已記錄 ${count} 次練習`,
     home: "首頁",
     journey: "旅程",
-    garden: "花園",
+garden: "花園",
     notes: "記錄",
+    about: "關於",
+    safetyCardTitle: "安全與 AI",
     progressHome: "探索",
     progressPark: "表達意願",
     progressPractice: "安全計畫",
@@ -337,6 +346,10 @@ const gameCopy: Record<Language, {
   stone: string;
   collectPetal: string;
   collectStone: string;
+  butterfly: string;
+  watchButterfly: string;
+  butterflyRest: string;
+  itemAdded: string;
   backpack: string;
   visitPuppy: string;
   puppyWaiting: string;
@@ -346,6 +359,7 @@ const gameCopy: Record<Language, {
   modelSupport: string;
   modelSupportHint: string;
   modelCue: string;
+  modelWatching: string;
   nowTry: string;
   holdToSay: string;
   keepHolding: string;
@@ -368,6 +382,10 @@ const gameCopy: Record<Language, {
     stone: "Round stone",
     collectPetal: "Pick up the fallen petal",
     collectStone: "Pick up the round stone",
+    butterfly: "A resting butterfly",
+    watchButterfly: "Watch the butterfly",
+    butterflyRest: "The butterfly opens and closes its wings. You can just watch, as long as you like.",
+    itemAdded: "Added to your walk bag",
     backpack: "Walk bag",
     visitPuppy: "Visit Puppy",
     puppyWaiting: "Puppy is blowing bubbles",
@@ -377,6 +395,7 @@ const gameCopy: Record<Language, {
     modelSupport: "Show first, then try",
     modelSupportHint: "See one calm example before each action",
     modelCue: "First, watch one calm example.",
+    modelWatching: "Watching the example…",
     nowTry: "Now you can try",
     holdToSay: "Press and hold: “No. Please stop.”",
     keepHolding: "Keep holding to use clear words",
@@ -396,9 +415,13 @@ const gameCopy: Record<Language, {
     questIntro: "按照自己的节奏看看周围。找到一片落下的花瓣和一颗圆石头，再去看看小狗的泡泡。",
     questProgress: (count) => `已找到 ${count}/2`,
     petal: "落下的花瓣",
-    stone: "圆石头",
+ stone: "圆石头",
     collectPetal: "捡起落下的花瓣",
     collectStone: "捡起圆石头",
+    butterfly: "停歇的蝴蝶",
+    watchButterfly: "看看蝴蝶",
+  butterflyRest: "蝴蝶轻轻地开合翅膀。你可以就这样看着，想看多久都可以。",
+    itemAdded: "已放进散步小包",
     backpack: "散步小包",
     visitPuppy: "去看看小狗",
     puppyWaiting: "小狗正在吹泡泡",
@@ -408,6 +431,7 @@ const gameCopy: Record<Language, {
     modelSupport: "先示范，再尝试",
     modelSupportHint: "每个动作前先看一次平静示范",
     modelCue: "先看一次平静的动作示范。",
+    modelWatching: "正在看示范……",
     nowTry: "现在可以试一试",
     holdToSay: "按住说：“不要，请停下来。”",
     keepHolding: "继续按住，清楚地说出来",
@@ -430,6 +454,10 @@ const gameCopy: Record<Language, {
     stone: "圓石",
     collectPetal: "撿起落下的花瓣",
     collectStone: "撿起圓石",
+    butterfly: "停歇的蝴蝶",
+    watchButterfly: "看看蝴蝶",
+    butterflyRest: "蝴蝶輕輕地開合翅膀。你可以就這樣看著，想看多久都可以。",
+    itemAdded: "已放進散步小包",
     backpack: "散步小包",
     visitPuppy: "去看看小狗",
     puppyWaiting: "小狗正在吹泡泡",
@@ -438,7 +466,8 @@ const gameCopy: Record<Language, {
     modelShort: "先示範",
     modelSupport: "先示範，再嘗試",
     modelSupportHint: "每個動作前先看一次平靜示範",
-    modelCue: "先看一次平靜的動作示範。",
+  modelCue: "先看一次平靜的動作示範。",
+    modelWatching: "正在看示範……",
     nowTry: "現在可以試一試",
     holdToSay: "按住說：「不要，請停下來。」",
     keepHolding: "繼續按住，清楚地說出來",
@@ -542,7 +571,7 @@ function ExplorationLayer({
   language,
   discovered,
   onDiscover,
-  onVisitPuppy,
+onVisitPuppy,
 }: {
   language: Language;
   discovered: DiscoveryId[];
@@ -551,39 +580,61 @@ function ExplorationLayer({
 }) {
   const g = gameCopy[language];
   const ready = discovered.length >= 2;
+  const [lastAdded, setLastAdded] = useState<DiscoveryId | null>(null);
+  const [butterflyOpen, setButterflyOpen] = useState(false);
+
+  const handleDiscover = (item: DiscoveryId) => {
+    if (discovered.includes(item)) return;
+    onDiscover(item);
+    setLastAdded(item);
+  };
+
   return (
     <div className="exploration-layer">
-      <section className="quest-card" aria-live="polite">
+  <section className="quest-card" aria-live="polite">
         <div className="quest-heading"><Backpack aria-hidden="true" /><div><strong>{g.questTitle}</strong><span>{g.questProgress(discovered.length)}</span></div></div>
-        <p>{g.questIntro}</p>
-        <div className="backpack-items" aria-label={g.backpack}>
+      <p>{g.questIntro}</p>
+   <div className="backpack-items" aria-label={g.backpack}>
           <span className={discovered.includes("petal") ? "found" : ""}><Flower2 aria-hidden="true" />{g.petal}</span>
           <span className={discovered.includes("stone") ? "found" : ""}><CircleDot aria-hidden="true" />{g.stone}</span>
         </div>
+        {lastAdded && (
+          <p className="quest-feedback" aria-live="polite"><Check aria-hidden="true" />{g.itemAdded}: {lastAdded === "petal" ? g.petal : g.stone}</p>
+     )}
       </section>
 
       <button
-        type="button"
+  type="button"
         className={`world-hotspot petal-hotspot ${discovered.includes("petal") ? "is-found" : ""}`}
-        onClick={() => onDiscover("petal")}
-        disabled={discovered.includes("petal")}
-        aria-label={g.collectPetal}
+        onClick={() => handleDiscover("petal")}
+      disabled={discovered.includes("petal")}
+      aria-label={g.collectPetal}
       ><Flower2 aria-hidden="true" /><span>{g.petal}</span></button>
       <button
         type="button"
         className={`world-hotspot stone-hotspot ${discovered.includes("stone") ? "is-found" : ""}`}
-        onClick={() => onDiscover("stone")}
+        onClick={() => handleDiscover("stone")}
         disabled={discovered.includes("stone")}
         aria-label={g.collectStone}
       ><CircleDot aria-hidden="true" /><span>{g.stone}</span></button>
       <button
+    type="button"
+      className={`world-hotspot butterfly-hotspot ${butterflyOpen ? "is-watching" : ""}`}
+    onClick={() => setButterflyOpen((open) => !open)}
+        aria-label={g.watchButterfly}
+        aria-pressed={butterflyOpen}
+      ><Sparkles aria-hidden="true" /><span>{g.butterfly}</span></button>
+      {butterflyOpen && (
+<div className="butterfly-note" role="note">{g.butterflyRest}</div>
+      )}
+      <button
         type="button"
         className={`world-hotspot puppy-hotspot ${ready ? "is-ready" : ""}`}
-        onClick={onVisitPuppy}
-        disabled={!ready}
+    onClick={onVisitPuppy}
+  disabled={!ready}
         aria-label={ready ? g.visitPuppy : g.puppyWaiting}
       ><Sparkles aria-hidden="true" /><span>{ready ? g.visitPuppy : g.puppyWaiting}</span></button>
-    </div>
+  </div>
   );
 }
 
@@ -623,7 +674,7 @@ function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; red
         {usesDogActionSheet ? (
           <span className={`sprite-window dog-action-sprite ${dogActionPose}`}><img src="/assets/dog-actions.png" alt="" /></span>
         ) : usesBubbleIdle ? (
-          <span className="sprite-window dog-bubble-sprite"><img src={reducedMotion ? "/assets/dog-bubble-still.png" : "/assets/dog-bubble.webp"} alt="" /></span>
+          <span className={`sprite-window dog-bubble-sprite ${reducedMotion ? "is-still" : ""}`}><img src="/assets/dog-bubble-still.png" alt="" /></span>
         ) : (
           <span className={`sprite-window dog-sprite ${dogPose}`}><img src="/assets/dog-2d.png" alt="" /></span>
         )}
@@ -671,35 +722,53 @@ function JourneyDialogue({
   const dialogueText = personalizedText(node.text[language], language, playerName);
   const g = gameCopy[language];
   const needsDemonstration = supportMode === "model-first" && node.kind === "action" && !demonstrated;
+  const [watching, setWatching] = useState(false);
+
+  // In show-first mode, tapping the cue plays one calm demonstration preview
+  // before the child is asked to act. Calm mode resolves it without motion.
+  const runDemonstration = () => {
+    if (watching) return;
+    setWatching(true);
+ const settle = () => {
+      setWatching(false);
+      onDemonstrate();
+    };
+    if (reducedMotion) {
+      settle();
+    } else {
+      window.setTimeout(settle, 1400);
+    }
+  };
+
   return (
     <div className={`dialogue journey-dialogue kind-${node.kind}`} role={isChoice ? "group" : undefined} aria-label={dialogueText}>
       <div className={`speech-bubble ${node.actor === "trusted-adult" ? "adult-bubble" : ""}`}>
         <Speaker node={node} language={language} playerName={playerName} />
         <div className="speech-content">
-          <small>{actorLabel(node, language, playerName)}</small>
+      <small>{actorLabel(node, language, playerName)}</small>
           <span>{dialogueText}</span>
         </div>
       </div>
       {node.choices ? (
         <div className="choice-stack">
           {node.choices.map((choice) => (
-            <button type="button" onClick={() => onAdvance(choice.id)} key={choice.id}>
+ <button type="button" onClick={() => onAdvance(choice.id)} key={choice.id}>
               <span className={`choice-icon ${choice.id === "accept" ? "heart" : "hand"}`} aria-hidden="true"><ActionIcon action={choice.action} /></span>
               {choice.label[language]}
-            </button>
+     </button>
           ))}
         </div>
       ) : needsDemonstration ? (
-        <button className="primary-button compact journey-continue model-first-action" type="button" onClick={onDemonstrate}>
-          <WandSparkles aria-hidden="true" />
-          <span>{g.modelCue}</span>
+<button className={`primary-button compact journey-continue model-first-action ${watching ? "is-demonstrating" : ""}`} type="button" onClick={runDemonstration} disabled={watching} aria-live="polite">
+          <span className="demo-icon" aria-hidden="true"><ActionIcon action={node.action} /></span>
+        <span>{watching ? g.modelWatching : g.modelCue}</span>
         </button>
       ) : node.action === "repeat-boundary" ? (
         <HoldToSpeakButton label={g.holdToSay} holdingLabel={g.keepHolding} reducedMotion={reducedMotion} onComplete={() => onAdvance()} />
       ) : (
-        <button className="primary-button compact journey-continue" type="button" onClick={() => onAdvance()}>
+<button className="primary-button compact journey-continue" type="button" onClick={() => onAdvance()}>
           {supportMode === "model-first" && node.kind === "action" ? g.nowTry : node.cta?.[language]}
-          <ActionIcon action={node.action} />
+   <ActionIcon action={node.action} />
         </button>
       )}
     </div>
@@ -737,8 +806,19 @@ export default function Home() {
       const savedLanguage = window.localStorage.getItem("safe-garden-language") as Language | null;
       const savedSupportMode = window.localStorage.getItem(SUPPORT_MODE_STORAGE_KEY) as SupportMode | null;
       const savedMusic = window.localStorage.getItem(MUSIC_STORAGE_KEY);
-      const savedPlayerName = window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY)?.trim() ?? "";
+   const savedPlayerName = window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY)?.trim() ?? "";
+   const savedDiscoveries = window.localStorage.getItem(DISCOVERIES_STORAGE_KEY);
       setRecords(parsePracticeRecords(window.localStorage.getItem(PRACTICE_STORAGE_KEY)));
+      if (savedDiscoveries) {
+        try {
+  const parsed = JSON.parse(savedDiscoveries);
+       if (Array.isArray(parsed)) {
+   setDiscoveries(parsed.filter((item): item is DiscoveryId => item === "petal" || item === "stone"));
+          }
+        } catch {
+       // ignore malformed discovery cache
+        }
+      }
       if (savedCalm === "true" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         setReducedMotion(true);
         setMusicOn(false);
@@ -776,6 +856,11 @@ export default function Home() {
     if (!hydrated) return;
     window.localStorage.setItem(MUSIC_STORAGE_KEY, String(musicOn));
   }, [musicOn, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+  window.localStorage.setItem(DISCOVERIES_STORAGE_KEY, JSON.stringify(discoveries));
+  }, [discoveries, hydrated]);
 
   const reviewedCoachCard = useMemo(() => {
     const record = completedRecord ?? records[0];
@@ -951,7 +1036,27 @@ export default function Home() {
       .map((event) => event.action)
       .filter((action) => ["step-back", "repeat-boundary", "leave", "seek-help"].includes(action)),
   ).size;
-  const plantedPlots = new Set(records.map((record, index) => record.gardenPlot ?? (index % 8)));
+  // Build the garden purely from persisted records. Records that stored an
+  // explicit chosen plot keep it; older records without one are placed into the
+  // first remaining open plot so nothing overlaps or is overwritten.
+  const plantedPlots = useMemo(() => {
+    const taken = new Set<number>();
+for (const record of records) {
+      if (typeof record.gardenPlot === "number" && !taken.has(record.gardenPlot)) {
+ taken.add(record.gardenPlot);
+      }
+    }
+    for (const record of records) {
+      if (typeof record.gardenPlot === "number") continue;
+      for (let plot = 0; plot < 8; plot += 1) {
+      if (!taken.has(plot)) {
+ taken.add(plot);
+      break;
+   }
+}
+    }
+    return taken;
+  }, [records]);
   const gardenIsFull = plantedPlots.size >= 8;
 
   const progressIndex = gamePhase === "welcome" || gamePhase === "explore"
@@ -1031,7 +1136,7 @@ export default function Home() {
                   <span className="switch" aria-hidden="true" />
                 </label>
                 <label className="setting-row">
-                  <span><strong>{t.soundLabel}</strong><small>{musicOn ? "On" : "Off"}</small></span>
+                  <span><strong>{t.soundLabel}</strong><small>{musicOn ? t.on : t.off}</small></span>
                   <input type="checkbox" checked={musicOn} disabled={reducedMotion} onChange={(event) => setMusicOn(event.target.checked)} />
                   <span className="switch" aria-hidden="true" />
                 </label>
@@ -1176,7 +1281,14 @@ export default function Home() {
             <blockquote>{coachCard?.tonightPrompt ?? t.defaultTonightPrompt}</blockquote>
             <p className="parent-reply">{coachCard?.parentReply ?? t.defaultParentReply}</p>
             {coachCard && gamePhase === "complete" && (
-              <div className="next-focus"><strong>{gameCopy[language].nextFocus}</strong><p>{coachCard.nextFocus}</p></div>
+      <div className="next-focus"><strong>{gameCopy[language].nextFocus}</strong><p>{coachCard.nextFocus}</p></div>
+      )}
+     {gamePhase === "complete" && (
+       <button className="safety-boundary-chip" type="button" onClick={() => openPanelView("about")}>
+      <ShieldCheck aria-hidden="true" />
+  <span>{aboutContent[language].safetyWording}</span>
+  <Info aria-hidden="true" />
+        </button>
             )}
             {completedRecord && gamePhase === "complete" && agentStatus !== "loading" && (
               <button className="coach-refresh" type="button" onClick={() => void requestAgentCoach(completedRecord)}><WandSparkles aria-hidden="true" />{gameCopy[language].refreshCoach}</button>
@@ -1229,10 +1341,30 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-              <div className="garden-summary"><strong>{t.practicesRecorded(records.length)}</strong><span>{t.openPlots}: {Math.max(0, 8 - plantedPlots.size)}</span></div>
-              <p className="panel-disclaimer">{t.safeNote}</p>
+      <div className="garden-summary"><strong>{t.practicesRecorded(records.length)}</strong><span>{t.openPlots}: {Math.max(0, 8 - plantedPlots.size)}</span></div>
+       <p className="panel-disclaimer">{t.safeNote}</p>
+       </section>
+   ) : panelView === "about" ? (
+  <section className="panel-view about-view" aria-labelledby="about-title">
+         <p className="panel-eyebrow">{aboutContent[language].eyebrow}</p>
+          <h2 id="about-title">{aboutContent[language].title}</h2>
+     <ul className="about-list">
+    <li><UserRoundCheck aria-hidden="true" /><span>{aboutContent[language].forWho}</span></li>
+              <li><Heart aria-hidden="true" /><span>{aboutContent[language].needs}</span></li>
+          <li><ShieldCheck aria-hidden="true" /><span>{aboutContent[language].practiceNotAssessment}</span></li>
+         <li><Trees aria-hidden="true" /><span>{aboutContent[language].alongside}</span></li>
+         </ul>
+        <div className="safety-flow-card">
+           <div className="card-title"><ShieldCheck aria-hidden="true" /><h3>{aboutContent[language].safetyTitle}</h3></div>
+         <ol className="safety-flow">
+      <li><span className="safety-step-index" aria-hidden="true">1</span>{aboutContent[language].safetyEngine}</li>
+     <li><span className="safety-step-index" aria-hidden="true">2</span>{aboutContent[language].safetyWording}</li>
+      <li><span className="safety-step-index" aria-hidden="true">3</span>{aboutContent[language].safetyFallback}</li>
+    </ol>
+ </div>
+    <p className="panel-disclaimer">{t.safeNote}</p>
             </section>
-          ) : (
+   ) : (
             <section className="panel-view" aria-labelledby="history-title">
               <p className="panel-eyebrow">{t.safeNote}</p>
               <h2 id="history-title">{t.historyTitle}</h2>
@@ -1255,7 +1387,8 @@ export default function Home() {
           <button className={panelView === "home" && !settingsOpen ? "active" : ""} aria-current={panelView === "home" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("home")} type="button"><HomeIcon aria-hidden="true" />{t.home}</button>
           <button className={panelView === "journey" && !settingsOpen ? "active" : ""} aria-current={panelView === "journey" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("journey")} type="button"><Map aria-hidden="true" />{t.journey}</button>
           <button className={panelView === "garden" && !settingsOpen ? "active" : ""} aria-current={panelView === "garden" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("garden")} type="button"><Flower2 aria-hidden="true" />{t.garden}</button>
-          <button className={panelView === "notes" && !settingsOpen ? "active" : ""} aria-current={panelView === "notes" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("notes")} type="button"><NotebookText aria-hidden="true" />{t.notes}</button>
+   <button className={panelView === "notes" && !settingsOpen ? "active" : ""} aria-current={panelView === "notes" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("notes")} type="button"><NotebookText aria-hidden="true" />{t.notes}</button>
+          <button className={panelView === "about" && !settingsOpen ? "active" : ""} aria-current={panelView === "about" && !settingsOpen ? "page" : undefined} onClick={() => openPanelView("about")} type="button"><Info aria-hidden="true" />{t.about}</button>
         </nav>
       </aside>
     </main>

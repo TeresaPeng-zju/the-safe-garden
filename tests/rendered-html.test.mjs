@@ -104,6 +104,20 @@ test("garden plots preserve complete growth artwork", async () => {
   assert.match(styles, /\.garden-plot\s*\{[^}]*aspect-ratio:\s*1;/s);
   assert.match(styles, /\.garden-plot \.growth-stage\s*\{[^}]*height:\s*100%;/s);
   assert.doesNotMatch(styles, /\.garden-plot\s*\{[^}]*height:\s*108px;/s);
+  assert.match(styles, /\.garden-bed\s*\{[^}]*height:\s*108px;/s);
+  assert.match(styles, /\.garden-bed \.growth-stage\s*\{[^}]*height:\s*92px;/s);
+});
+
+test("exploration labels avoid the fox and the bubble dog keeps one body scale", async () => {
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(styles, /\.petal-hotspot\s*\{[^}]*left:\s*38%;[^}]*bottom:\s*29%;/s);
+  assert.doesNotMatch(styles, /\.petal-hotspot\s*\{[^}]*left:\s*33%;/s);
+  assert.match(pageSource, /dog-bubble-sprite[^\n]*dog-bubble-still\.png/);
+  assert.doesNotMatch(pageSource, /reducedMotion\s*\?\s*"\/assets\/dog-bubble-still\.png"\s*:\s*"\/assets\/dog-bubble\.webp"/);
+  assert.match(styles, /@keyframes bubbleDrift/);
 });
 
 test("the help scene places the child beside the listening adult", async () => {
@@ -140,4 +154,64 @@ test("language controls include persisted Traditional Chinese", async () => {
   assert.match(pageSource, /onClick=\{\(\) => setLanguage\("zh-TW"\)\}>繁體<\/button>/);
   assert.match(pageSource, /traditionalChinese: "繁體中文"/);
   assert.match(pageSource, /language === "zh-TW" \? "zh-TW" : "en"/);
+});
+
+test("a restrained parent-side About entry explains who the product serves", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  // The About view exists as a parent-panel view, not in the child game.
+  assert.match(pageSource, /type PanelView = "home" \| "journey" \| "garden" \| "notes" \| "about"/);
+  assert.match(pageSource, /openPanelView\("about"\)/);
+  assert.match(pageSource, /aboutContent\[language\]/);
+  // The child game phases never include an about screen.
+  assert.doesNotMatch(pageSource, /GamePhase = [^;]*about/);
+});
+
+test("exploration includes an optional non-scored interaction and clear collection feedback", async () => {
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  // Optional butterfly interaction that does not affect the safety story.
+  assert.match(pageSource, /butterfly-hotspot/);
+  assert.match(pageSource, /watchButterfly/);
+  // It must not count toward discoveries or unlock the safety journey.
+  assert.match(pageSource, /const ready = discovered\.length >= 2/);
+  // Restrained collection feedback rather than a celebration or "correct".
+  assert.match(pageSource, /quest-feedback/);
+  assert.match(pageSource, /itemAdded/);
+  assert.match(styles, /\.butterfly-hotspot/);
+});
+
+test("picture support enlarges cues in the exploration layer too", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.picture-support \.world-hotspot/);
+});
+
+test("show-first mode plays a demonstration before the child acts", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /runDemonstration/);
+  assert.match(pageSource, /modelWatching/);
+  // Calm mode resolves the demonstration without motion.
+  assert.match(pageSource, /if \(reducedMotion\) \{\s*settle\(\);/s);
+});
+
+test("discoveries and garden placement are persisted and never overlap", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /DISCOVERIES_STORAGE_KEY = "safe-garden-discoveries"/);
+  assert.match(pageSource, /localStorage\.setItem\(DISCOVERIES_STORAGE_KEY/);
+  // Garden plots are derived from records with de-duplicated plots.
+  assert.match(pageSource, /const plantedPlots = useMemo/);
+  assert.match(pageSource, /taken\.add/);
+});
+
+test("the interface never shows scores, correctness, or ability wording", async () => {
+  const [pageSource, styles, journeySource] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../lib/journey.ts", import.meta.url), "utf8"),
+  ]);
+  const combined = `${pageSource}\n${styles}\n${journeySource}`;
+  assert.doesNotMatch(combined, /[🌱💡✋⚙✿♫🏆⭐✅❌]/u);
+  // No leaderboard, streak, XP, coins, or ability-level UI copy.
+  assert.doesNotMatch(pageSource, /leaderboard|\bstreak\b|\bXP\b|排行榜|连续签到|連續簽到|正确率|正確率|能力等级|能力等級/i);
 });

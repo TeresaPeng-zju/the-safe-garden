@@ -1,44 +1,58 @@
 import { NextResponse } from "next/server";
-import { isSafeCoachEnhancement, type Language, type SupportMode } from "../../../lib/journey";
+import {
+  isSafeCoachEnhancement,
+  isSameOriginRequest,
+  MAX_COACH_BODY_BYTES,
+  sanitizeCoachRequest,
+  type CoachRequestInput,
+} from "../../../lib/journey";
 
 export const runtime = "nodejs";
 
-type CoachRequest = {
-  language?: Language;
-  supportMode?: SupportMode;
-  initialConsent?: "accept" | "space" | null;
-  actions?: string[];
-};
+// Responses must never be cached: they are anonymous, short-lived, and per-request.
+const noStore = { "Cache-Control": "no-store, max-age=0" } as const;
 
-const allowedActions = new Set(["step-back", "repeat-boundary", "leave", "seek-help"]);
-
-function safeRequest(value: CoachRequest) {
-  const language: Language = value.language === "zh" || value.language === "zh-TW" ? value.language : "en";
-  const supportMode: SupportMode = value.supportMode === "picture" || value.supportMode === "model-first"
-    ? value.supportMode
-    : "standard";
-  const initialConsent = value.initialConsent === "accept" || value.initialConsent === "space" ? value.initialConsent : null;
-  const actions = Array.isArray(value.actions)
-    ? value.actions.filter((item): item is string => typeof item === "string" && allowedActions.has(item)).slice(0, 4)
-    : [];
-  return { language, supportMode, initialConsent, actions };
+function fallback(reason: string, status = 200) {
+  return NextResponse.json(
+    { ok: false, source: "reviewed-template", reason },
+    { status, headers: noStore },
+  );
 }
 
 export async function POST(request: Request) {
+  const sameOrigin = isSameOriginRequest({
+    host: request.headers.get("host"),
+    origin: request.headers.get("origin"),
+    referer: request.headers.get("referer"),
+  });
+  if (!sameOrigin) {
+    return fallback("cross-origin", 403);
+  }
+
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ ok: false, source: "reviewed-template", reason: "not-configured" });
+    return fallback("not-configured");
   }
 
-  let body: CoachRequest;
+  const rawBody = await request.text();
+  if (rawBody.length > MAX_COACH_BODY_BYTES) {
+    return fallback("payload-too-large", 413);
+  }
+
+  let body: CoachRequestInput;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody) as CoachRequestInput;
   } catch {
-    return NextResponse.json({ ok: false, source: "reviewed-template", reason: "invalid-request" }, { status: 400 });
+    return fallback("invalid-request", 400);
   }
 
-  const practice = safeRequest(body);
-  const outputLanguage = practice.language === "zh" ? "Simplified Chinese" : practice.language === "zh-TW" ? "Traditional Chinese used in Hong Kong" : "English";
+  // Only anonymous, whitelisted fields ever leave this server.
+  const practice = sanitizeCoachRequest(body);
+  const outputLanguage = practice.language === "zh"
+    ? "Simplified Chinese"
+    : practice.language === "zh-TW"
+      ? "Traditional Chinese used in Hong Kong"
+      : "English";
   const systemPrompt = `You are the constrained parent-coach layer for a safety-practice game for autistic children and their families.
 
 Return JSON only with exactly these string fields:
@@ -75,20 +89,28 @@ This layer may adapt wording only; the reviewed safety sequence is fixed.`;
     });
 
     if (!response.ok) {
-      return NextResponse.json({ ok: false, source: "reviewed-template", reason: "provider-error" });
+      return fallback("provider-error");
     }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string | null } }> };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) {
-      return NextResponse.json({ ok: false, source: "reviewed-template", reason: "empty-response" });
+      return fallback("empty-response");
     }
-    const candidate: unknown = JSON.parse(content);
+    let candidate: unknown;
+    try {
+      candidate = JSON.parse(content);
+    } catch {
+      return fallback("invalid-json");
+    }
     if (!isSafeCoachEnhancement(candidate)) {
-      return NextResponse.json({ ok: false, source: "reviewed-template", reason: "guardrail-rejected" });
+      return fallback("guardrail-rejected");
     }
-    return NextResponse.json({ ok: true, source: "constrained-agent", candidate });
+    return NextResponse.json(
+      { ok: true, source: "constrained-agent", candidate },
+      { headers: noStore },
+    );
   } catch {
-    return NextResponse.json({ ok: false, source: "reviewed-template", reason: "unavailable" });
+    return fallback("unavailable");
   } finally {
     clearTimeout(timeout);
   }
