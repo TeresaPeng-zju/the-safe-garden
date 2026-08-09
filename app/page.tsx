@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowDownLeft,
   ArrowRight,
+  Backpack,
   CalendarDays,
   Check,
+  CircleDot,
   DoorOpen,
   Flower2,
+  Footprints,
   Hand,
   Heart,
   Home as HomeIcon,
@@ -19,9 +21,11 @@ import {
   RotateCcw,
   Settings,
   ShieldCheck,
+  Sparkles,
   Trees,
   UserRoundCheck,
   VolumeX,
+  WandSparkles,
   X,
 } from "lucide-react";
 import {
@@ -41,29 +45,34 @@ import {
   type Language,
   type PracticeRecord,
   type SemanticAction,
+  type SupportMode,
+  type DiscoveryId,
+  type CoachCard,
 } from "../lib/journey";
 
 type PanelView = "home" | "journey" | "garden" | "notes";
-type SupportMode = "standard" | "picture";
+type GamePhase = "welcome" | "explore" | "journey" | "plant" | "complete";
+type AgentStatus = "idle" | "loading" | "adapted" | "fallback";
 
 const SUPPORT_MODE_STORAGE_KEY = "safe-garden-support-mode";
 const MUSIC_STORAGE_KEY = "safe-garden-music";
+const PLAYER_NAME_STORAGE_KEY = "safe-garden-player-name";
 
-const copy = {
+const baseCopy = {
   en: {
     brand: "The Safe Garden",
     welcomeTitle: "Ready for today’s little walk?",
-    welcomeBody: "Little Fox will practice what to do when a friend comes too close and does not stop right away.",
+    welcomeBody: "Explore the park, collect two small treasures, and practice what to do when a friend comes too close and does not stop.",
     calmLabel: "Calm mode",
     calmHint: "Less movement and no background music",
     soundLabel: "Garden sounds",
     start: "Start today’s walk",
     todaysWalk: "Today’s Walk",
-    park: "A complete boundary practice.",
+    park: "Explore, practice, and grow the garden.",
     gardenTitle: "A practice flower grew",
     replay: "Practice again",
     forParents: "For Parents",
-    parentWaiting: "After the trusted adult responds, this journey will be saved as one completed practice.",
+    parentWaiting: "After the trusted adult responds, your family can plant the practice seed together.",
     observedTitle: "What happened",
     completedLabel: "One practice was recorded",
     tonight: "Try this tonight",
@@ -75,14 +84,14 @@ const copy = {
     journey: "Journey",
     garden: "Garden",
     notes: "Notes",
-    progressHome: "Home",
+    progressHome: "Explore",
     progressPark: "Consent",
     progressPractice: "Safety plan",
     progressGarden: "Garden grows",
     musicOn: "Mute garden music",
     musicOff: "Play garden music",
     settings: "Settings",
-    language: "中文",
+    language: "简中",
     safeNote: "Practice support, not an assessment.",
     actorDog: "Puppy",
     actorPlayer: "Little Fox",
@@ -93,6 +102,7 @@ const copy = {
     languageLabel: "Language",
     english: "English",
     chinese: "中文",
+    traditionalChinese: "繁體中文",
     supportMode: "Support style",
     standardSupport: "Words + icons",
     standardSupportHint: "Balanced prompts for this practice",
@@ -103,7 +113,7 @@ const copy = {
     journeyLibrary: "Practice journeys",
     journeyLibraryIntro: "Choose one short, low-pressure situation to practice together.",
     activeJourney: "Hugs and body space",
-    activeJourneyBody: "Practice consent, stepping back, clear words, leaving, and asking for help.",
+    activeJourneyBody: "Explore, collect, practice consent and safety actions, then choose where the seed will grow.",
     continueJourney: "Continue today’s journey",
     startAgain: "Practice this journey",
     comingLater: "Coming later",
@@ -124,21 +134,33 @@ const copy = {
     safetyActions: (count: number) => `${count} safety steps were practiced.`,
     practiceNumber: (number: number) => `Practice ${number}`,
     today: "Today",
+    defaultPlayerName: "Little Fox",
+    nameTitle: "What should we call your fox?",
+    nameIntro: "Choose a familiar name to make each practice feel like your family’s own story.",
+    nameLabel: "Fox’s name",
+    namePlaceholder: "Enter a name",
+    nameHint: "You can change this later in Family settings.",
+    saveName: "Begin with this name",
+    nameSettingsLabel: "Fox’s name",
+    updateName: "Save name",
+    todayPractice: "Today’s practice",
+    defaultTonightPrompt: "“Who are the adults you can ask for help?”",
+    defaultParentReply: "Listen first, then thank the child for telling you.",
   },
   zh: {
     brand: "安全花园",
     welcomeTitle: "准备好今天的小小散步了吗？",
-    welcomeBody: "小狐狸会练习：当朋友靠得太近，而且没有马上停下来时，可以怎么做。",
+    welcomeBody: "探索公园、收集两件小发现，再练习：当朋友靠得太近而且没有停下来时，可以怎么做。",
     calmLabel: "安静模式",
     calmHint: "减少动态，并关闭背景音乐",
     soundLabel: "花园音乐",
     start: "开始今天的散步",
     todaysWalk: "今天的散步",
-    park: "一次完整的身体边界练习。",
+    park: "探索、练习，再让花园成长。",
     gardenTitle: "一朵练习花长出来了",
     replay: "再练习一次",
     forParents: "给家长",
-    parentWaiting: "可信赖的大人回应后，这段旅程才会被保存为一次完成的练习。",
+    parentWaiting: "可信赖的大人回应后，家庭可以一起种下这次练习的种子。",
     observedTitle: "这次发生了什么",
     completedLabel: "已记录一次练习",
     tonight: "今晚试一试",
@@ -150,14 +172,14 @@ const copy = {
     journey: "旅程",
     garden: "花园",
     notes: "记录",
-    progressHome: "出发",
+    progressHome: "探索",
     progressPark: "表达意愿",
     progressPractice: "安全计划",
     progressGarden: "花园成长",
     musicOn: "关闭花园音乐",
     musicOff: "播放花园音乐",
     settings: "设置",
-    language: "EN",
+    language: "繁體",
     safeNote: "这是练习支持，不是能力评估。",
     actorDog: "小狗",
     actorPlayer: "小狐狸",
@@ -168,6 +190,7 @@ const copy = {
     languageLabel: "语言",
     english: "English",
     chinese: "中文",
+    traditionalChinese: "繁體中文",
     supportMode: "支持方式",
     standardSupport: "文字与图标",
     standardSupportHint: "使用均衡的文字和动作提示",
@@ -178,7 +201,7 @@ const copy = {
     journeyLibrary: "练习旅程",
     journeyLibraryIntro: "选择一个短小、低压力的生活情境，一起练习。",
     activeJourney: "拥抱与身体空间",
-    activeJourneyBody: "练习表达意愿、后退、清楚说出边界、离开和求助。",
+    activeJourneyBody: "探索和收集，再练习表达意愿、安全行动与求助，最后自己选择种植位置。",
     continueJourney: "继续今天的旅程",
     startAgain: "练习这段旅程",
     comingLater: "后续开放",
@@ -199,24 +222,369 @@ const copy = {
     safetyActions: (count: number) => `这次练习了 ${count} 个安全行动。`,
     practiceNumber: (number: number) => `第 ${number} 次练习`,
     today: "今天",
+    defaultPlayerName: "小狐狸",
+    nameTitle: "想怎么称呼小狐狸？",
+    nameIntro: "取一个熟悉的名字，让每次练习更像属于这个家庭的故事。",
+    nameLabel: "小狐狸的名字",
+    namePlaceholder: "输入名字",
+    nameHint: "之后可以在家庭设置中修改。",
+    saveName: "用这个名字开始",
+    nameSettingsLabel: "小狐狸的名字",
+    updateName: "保存名字",
+    todayPractice: "今天的练习",
+    defaultTonightPrompt: "“你可以向哪些大人求助？”",
+    defaultParentReply: "先听孩子说完，再谢谢孩子愿意告诉你。",
   },
 } as const;
 
-function actorLabel(node: JourneyNode, language: Language): string {
+const copy = {
+  ...baseCopy,
+  "zh-TW": {
+    ...baseCopy.zh,
+    brand: "安全花園",
+    welcomeTitle: "準備好今天的小小散步了嗎？",
+    welcomeBody: "探索公園、收集兩件小發現，再練習：當朋友靠得太近而且沒有停下來時，可以怎麼做。",
+    calmLabel: "安靜模式",
+    calmHint: "減少動態，並關閉背景音樂",
+    soundLabel: "花園音樂",
+    start: "開始今天的散步",
+    todaysWalk: "今天的散步",
+    park: "探索、練習，再讓花園成長。",
+    gardenTitle: "一朵練習花長出來了",
+    replay: "再練習一次",
+    forParents: "給家長",
+    parentWaiting: "可信賴的大人回應後，家庭可以一起種下這次練習的種子。",
+    observedTitle: "這次發生了什麼",
+    completedLabel: "已記錄一次練習",
+    tonight: "今晚試一試",
+    askAtCalmMoment: "在輕鬆的時候，可以問：",
+    ourGarden: "我們的花園",
+    keepGrowing: "花代表一起練習過，不代表答對了。",
+    practicesRecorded: (count: number) => `這台裝置已記錄 ${count} 次練習`,
+    home: "首頁",
+    journey: "旅程",
+    garden: "花園",
+    notes: "記錄",
+    progressHome: "探索",
+    progressPark: "表達意願",
+    progressPractice: "安全計畫",
+    progressGarden: "花園成長",
+    musicOn: "關閉花園音樂",
+    musicOff: "播放花園音樂",
+    settings: "設定",
+    language: "EN",
+    safeNote: "這是練習支持，不是能力評估。",
+    actorDog: "小狗",
+    actorPlayer: "小狐狸",
+    actorAdult: "可信賴的大人",
+    settingsTitle: "家庭設定",
+    settingsIntro: "選擇更平靜、更清晰的共同練習方式。",
+    close: "關閉",
+    languageLabel: "語言",
+    chinese: "簡體中文",
+    traditionalChinese: "繁體中文",
+    supportMode: "支持方式",
+    standardSupport: "文字與圖示",
+    standardSupportHint: "使用均衡的文字和動作提示",
+    pictureSupport: "放大圖片提示",
+    pictureSupportHint: "讓動作符號更容易被注意到",
+    on: "開啟",
+    off: "關閉",
+    journeyLibrary: "練習旅程",
+    journeyLibraryIntro: "選擇一個短小、低壓力的生活情境，一起練習。",
+    activeJourney: "擁抱與身體空間",
+    activeJourneyBody: "探索和收集，再練習表達意願、安全行動與求助，最後自己選擇種植位置。",
+    continueJourney: "繼續今天的旅程",
+    startAgain: "練習這段旅程",
+    comingLater: "後續開放",
+    secretJourney: "讓人不舒服的祕密",
+    secretJourneyBody: "練習察覺讓人不舒服的祕密，並告訴可信賴的大人。",
+    familiarJourney: "熟人與陌生人",
+    familiarJourneyBody: "根據對方做了什麼來判斷，而不只看是否認識。",
+    careJourney: "照護與就醫",
+    careJourneyBody: "練習在照護中獲得清楚說明、同意與支持。",
+    gardenViewTitle: "我們的練習花園",
+    gardenViewIntro: "每朵花代表家庭完成過一次練習，從不代表分數。",
+    openPlots: "留給未來練習的位置",
+    historyTitle: "練習記錄",
+    historyIntro: "只儲存在這台裝置上的客觀記錄。",
+    noHistory: "還沒有完成並記錄的練習。",
+    initialChoiceSpace: "小狐狸一開始選擇需要空間。",
+    initialChoiceAccept: "小狐狸一開始選擇接受擁抱。",
+    safetyActions: (count: number) => `這次練習了 ${count} 個安全行動。`,
+    practiceNumber: (number: number) => `第 ${number} 次練習`,
+    today: "今天",
+    defaultPlayerName: "小狐狸",
+    nameTitle: "想怎麼稱呼小狐狸？",
+    nameIntro: "取一個熟悉的名字，讓每次練習更像屬於這個家庭的故事。",
+    nameLabel: "小狐狸的名字",
+    namePlaceholder: "輸入名字",
+    nameHint: "之後可以在家庭設定中修改。",
+    saveName: "用這個名字開始",
+    nameSettingsLabel: "小狐狸的名字",
+    updateName: "儲存名字",
+    todayPractice: "今天的練習",
+    defaultTonightPrompt: "「你可以向哪些大人求助？」",
+    defaultParentReply: "先聽孩子說完，再謝謝孩子願意告訴你。",
+  },
+} as const;
+
+const gameCopy: Record<Language, {
+  questTitle: string;
+  questIntro: string;
+  questProgress: (count: number) => string;
+  petal: string;
+  stone: string;
+  collectPetal: string;
+  collectStone: string;
+  backpack: string;
+  visitPuppy: string;
+  puppyWaiting: string;
+  standardShort: string;
+  pictureShort: string;
+  modelShort: string;
+  modelSupport: string;
+  modelSupportHint: string;
+  modelCue: string;
+  nowTry: string;
+  holdToSay: string;
+  keepHolding: string;
+  choosePlot: string;
+  choosePlotIntro: string;
+  plantHere: string;
+  seedFound: string;
+  nextFocus: string;
+  coachReviewed: string;
+  coachLoading: string;
+  coachAdapted: string;
+  coachFallback: string;
+  refreshCoach: string;
+}> = {
+  en: {
+    questTitle: "Find two park treasures",
+    questIntro: "Look around at your own pace. Tap a petal and a round stone, then visit Puppy’s bubbles.",
+    questProgress: (count) => `${count} of 2 found`,
+    petal: "Fallen petal",
+    stone: "Round stone",
+    collectPetal: "Pick up the fallen petal",
+    collectStone: "Pick up the round stone",
+    backpack: "Walk bag",
+    visitPuppy: "Visit Puppy",
+    puppyWaiting: "Puppy is blowing bubbles",
+    standardShort: "Words + icons",
+    pictureShort: "Large pictures",
+    modelShort: "Show me first",
+    modelSupport: "Show first, then try",
+    modelSupportHint: "See one calm example before each action",
+    modelCue: "First, watch one calm example.",
+    nowTry: "Now you can try",
+    holdToSay: "Press and hold: “No. Please stop.”",
+    keepHolding: "Keep holding to use clear words",
+    choosePlot: "Where should today’s seed grow?",
+    choosePlotIntro: "Choose any open patch. The flower marks that your family practiced together.",
+    plantHere: "Plant in this patch",
+    seedFound: "Puppy shared the last spring treasure: a seed.",
+    nextFocus: "A small next practice",
+    coachReviewed: "Reviewed family guidance",
+    coachLoading: "Adapting the family prompt",
+    coachAdapted: "AI-adapted within reviewed safety rules",
+    coachFallback: "Reviewed guidance is ready offline",
+    refreshCoach: "Adapt wording again",
+  },
+  zh: {
+    questTitle: "寻找两件公园小发现",
+    questIntro: "按照自己的节奏看看周围。找到一片落下的花瓣和一颗圆石头，再去看看小狗的泡泡。",
+    questProgress: (count) => `已找到 ${count}/2`,
+    petal: "落下的花瓣",
+    stone: "圆石头",
+    collectPetal: "捡起落下的花瓣",
+    collectStone: "捡起圆石头",
+    backpack: "散步小包",
+    visitPuppy: "去看看小狗",
+    puppyWaiting: "小狗正在吹泡泡",
+    standardShort: "文字与图标",
+    pictureShort: "放大图片",
+    modelShort: "先示范",
+    modelSupport: "先示范，再尝试",
+    modelSupportHint: "每个动作前先看一次平静示范",
+    modelCue: "先看一次平静的动作示范。",
+    nowTry: "现在可以试一试",
+    holdToSay: "按住说：“不要，请停下来。”",
+    keepHolding: "继续按住，清楚地说出来",
+    choosePlot: "今天的种子想种在哪里？",
+    choosePlotIntro: "选择任意一块空地。花只代表这个家庭一起练习过。",
+    plantHere: "把种子种在这里",
+    seedFound: "小狗送来了最后一件春日发现：一颗种子。",
+    nextFocus: "下一次小练习",
+    coachReviewed: "经过审核的家庭提示",
+    coachLoading: "正在调整家庭提示",
+    coachAdapted: "AI 已在审核过的安全规则内调整措辞",
+    coachFallback: "离线审核提示已准备好",
+    refreshCoach: "重新调整措辞",
+  },
+  "zh-TW": {
+    questTitle: "尋找兩件公園小發現",
+    questIntro: "按照自己的節奏看看周圍。找到一片落下的花瓣和一顆圓石，再去看看小狗的泡泡。",
+    questProgress: (count) => `已找到 ${count}/2`,
+    petal: "落下的花瓣",
+    stone: "圓石",
+    collectPetal: "撿起落下的花瓣",
+    collectStone: "撿起圓石",
+    backpack: "散步小包",
+    visitPuppy: "去看看小狗",
+    puppyWaiting: "小狗正在吹泡泡",
+    standardShort: "文字與圖示",
+    pictureShort: "放大圖片",
+    modelShort: "先示範",
+    modelSupport: "先示範，再嘗試",
+    modelSupportHint: "每個動作前先看一次平靜示範",
+    modelCue: "先看一次平靜的動作示範。",
+    nowTry: "現在可以試一試",
+    holdToSay: "按住說：「不要，請停下來。」",
+    keepHolding: "繼續按住，清楚地說出來",
+    choosePlot: "今天的種子想種在哪裡？",
+    choosePlotIntro: "選擇任意一塊空地。花只代表這個家庭一起練習過。",
+    plantHere: "把種子種在這裡",
+    seedFound: "小狗送來了最後一件春日發現：一顆種子。",
+    nextFocus: "下一次小練習",
+    coachReviewed: "經過審核的家庭提示",
+    coachLoading: "正在調整家庭提示",
+    coachAdapted: "AI 已在審核過的安全規則內調整措辭",
+    coachFallback: "離線審核提示已準備好",
+    refreshCoach: "重新調整措辭",
+  },
+};
+
+function personalizedText(text: string, language: Language, playerName: string): string {
+  const fallbackName = copy[language].defaultPlayerName;
+  return text.replaceAll("Little Fox", playerName || fallbackName).replaceAll("小狐狸", playerName || fallbackName);
+}
+
+function actorLabel(node: JourneyNode, language: Language, playerName: string): string {
   const t = copy[language];
   if (node.actor === "dog") return t.actorDog;
   if (node.actor === "trusted-adult") return t.actorAdult;
-  return t.actorPlayer;
+  return playerName || t.defaultPlayerName;
 }
 
 function ActionIcon({ action }: { action?: SemanticAction }) {
   if (action === "accept-contact") return <Heart />;
   if (action === "set-boundary" || action === "repeat-boundary") return <Hand />;
-  if (action === "step-back") return <ArrowDownLeft />;
+  if (action === "step-back") return <Footprints />;
   if (action === "leave") return <DoorOpen />;
   if (action === "seek-help" || action === "trusted-adult-support") return <UserRoundCheck />;
   if (action === "repair") return <Check />;
   return <ArrowRight />;
+}
+
+function HoldToSpeakButton({
+  label,
+  holdingLabel,
+  reducedMotion,
+  onComplete,
+}: {
+  label: string;
+  holdingLabel: string;
+  reducedMotion: boolean;
+  onComplete: () => void;
+}) {
+  const [holding, setHolding] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completedRef = useRef(false);
+
+  const cancel = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setHolding(false);
+  };
+  const begin = () => {
+    if (timerRef.current || completedRef.current) return;
+    setHolding(true);
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      completedRef.current = true;
+      setHolding(false);
+      onComplete();
+    }, reducedMotion ? 650 : 950);
+  };
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <button
+      className={`primary-button compact journey-continue hold-action ${holding ? "is-holding" : ""}`}
+      type="button"
+      onPointerDown={begin}
+      onPointerUp={cancel}
+      onPointerCancel={cancel}
+      onPointerLeave={cancel}
+      onKeyDown={(event) => {
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          begin();
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === " " || event.key === "Enter") cancel();
+      }}
+      aria-label={label}
+    >
+      <span className="hold-action-progress" aria-hidden="true" />
+      <Hand aria-hidden="true" />
+      <span>{holding ? holdingLabel : label}</span>
+    </button>
+  );
+}
+
+function ExplorationLayer({
+  language,
+  discovered,
+  onDiscover,
+  onVisitPuppy,
+}: {
+  language: Language;
+  discovered: DiscoveryId[];
+  onDiscover: (item: DiscoveryId) => void;
+  onVisitPuppy: () => void;
+}) {
+  const g = gameCopy[language];
+  const ready = discovered.length >= 2;
+  return (
+    <div className="exploration-layer">
+      <section className="quest-card" aria-live="polite">
+        <div className="quest-heading"><Backpack aria-hidden="true" /><div><strong>{g.questTitle}</strong><span>{g.questProgress(discovered.length)}</span></div></div>
+        <p>{g.questIntro}</p>
+        <div className="backpack-items" aria-label={g.backpack}>
+          <span className={discovered.includes("petal") ? "found" : ""}><Flower2 aria-hidden="true" />{g.petal}</span>
+          <span className={discovered.includes("stone") ? "found" : ""}><CircleDot aria-hidden="true" />{g.stone}</span>
+        </div>
+      </section>
+
+      <button
+        type="button"
+        className={`world-hotspot petal-hotspot ${discovered.includes("petal") ? "is-found" : ""}`}
+        onClick={() => onDiscover("petal")}
+        disabled={discovered.includes("petal")}
+        aria-label={g.collectPetal}
+      ><Flower2 aria-hidden="true" /><span>{g.petal}</span></button>
+      <button
+        type="button"
+        className={`world-hotspot stone-hotspot ${discovered.includes("stone") ? "is-found" : ""}`}
+        onClick={() => onDiscover("stone")}
+        disabled={discovered.includes("stone")}
+        aria-label={g.collectStone}
+      ><CircleDot aria-hidden="true" /><span>{g.stone}</span></button>
+      <button
+        type="button"
+        className={`world-hotspot puppy-hotspot ${ready ? "is-ready" : ""}`}
+        onClick={onVisitPuppy}
+        disabled={!ready}
+        aria-label={ready ? g.visitPuppy : g.puppyWaiting}
+      ><Sparkles aria-hidden="true" /><span>{ready ? g.visitPuppy : g.puppyWaiting}</span></button>
+    </div>
+  );
 }
 
 function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; reducedMotion: boolean }) {
@@ -270,33 +638,46 @@ function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; red
   );
 }
 
-function Speaker({ node, language }: { node: JourneyNode; language: Language }) {
+function Speaker({ node, language, playerName }: { node: JourneyNode; language: Language; playerName: string }) {
   if (node.actor === "trusted-adult") {
     return <span className="speaker-dot trusted-adult-avatar" aria-hidden="true" />;
   }
   if (node.actor === "player") {
     return <span className="speaker-dot fox-dialogue-avatar" aria-hidden="true" />;
   }
-  return <span className="speaker-dot dog-avatar" aria-hidden="true" title={actorLabel(node, language)} />;
+  return <span className="speaker-dot dog-avatar" aria-hidden="true" title={actorLabel(node, language, playerName)} />;
 }
 
 function JourneyDialogue({
   node,
   language,
+  playerName,
+  supportMode,
+  reducedMotion,
+  demonstrated,
+  onDemonstrate,
   onAdvance,
 }: {
   node: JourneyNode;
   language: Language;
+  playerName: string;
+  supportMode: SupportMode;
+  reducedMotion: boolean;
+  demonstrated: boolean;
+  onDemonstrate: () => void;
   onAdvance: (choiceId?: JourneyChoice["id"]) => void;
 }) {
   const isChoice = node.kind === "choice";
+  const dialogueText = personalizedText(node.text[language], language, playerName);
+  const g = gameCopy[language];
+  const needsDemonstration = supportMode === "model-first" && node.kind === "action" && !demonstrated;
   return (
-    <div className={`dialogue journey-dialogue kind-${node.kind}`} role={isChoice ? "group" : undefined} aria-label={node.text[language]}>
+    <div className={`dialogue journey-dialogue kind-${node.kind}`} role={isChoice ? "group" : undefined} aria-label={dialogueText}>
       <div className={`speech-bubble ${node.actor === "trusted-adult" ? "adult-bubble" : ""}`}>
-        <Speaker node={node} language={language} />
+        <Speaker node={node} language={language} playerName={playerName} />
         <div className="speech-content">
-          <small>{actorLabel(node, language)}</small>
-          <span>{node.text[language]}</span>
+          <small>{actorLabel(node, language, playerName)}</small>
+          <span>{dialogueText}</span>
         </div>
       </div>
       {node.choices ? (
@@ -308,9 +689,16 @@ function JourneyDialogue({
             </button>
           ))}
         </div>
+      ) : needsDemonstration ? (
+        <button className="primary-button compact journey-continue model-first-action" type="button" onClick={onDemonstrate}>
+          <WandSparkles aria-hidden="true" />
+          <span>{g.modelCue}</span>
+        </button>
+      ) : node.action === "repeat-boundary" ? (
+        <HoldToSpeakButton label={g.holdToSay} holdingLabel={g.keepHolding} reducedMotion={reducedMotion} onComplete={() => onAdvance()} />
       ) : (
         <button className="primary-button compact journey-continue" type="button" onClick={() => onAdvance()}>
-          {node.cta?.[language]}
+          {supportMode === "model-first" && node.kind === "action" ? g.nowTry : node.cta?.[language]}
           <ActionIcon action={node.action} />
         </button>
       )}
@@ -322,14 +710,22 @@ export default function Home() {
   const [language, setLanguage] = useState<Language>("en");
   const [journey, setJourney] = useState<JourneyState>(() => createJourneyState());
   const [started, setStarted] = useState(false);
+  const [gamePhase, setGamePhase] = useState<GamePhase>("welcome");
+  const [discoveries, setDiscoveries] = useState<DiscoveryId[]>([]);
+  const [demonstratedNodes, setDemonstratedNodes] = useState<string[]>([]);
   const [records, setRecords] = useState<PracticeRecord[]>([]);
   const [completedRecord, setCompletedRecord] = useState<PracticeRecord | null>(null);
+  const [agentCoach, setAgentCoach] = useState<CoachCard | null>(null);
+  const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
   const [reducedMotion, setReducedMotion] = useState(false);
   const [musicOn, setMusicOn] = useState(true);
   const [panelView, setPanelView] = useState<PanelView>("home");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [supportMode, setSupportMode] = useState<SupportMode>("standard");
   const [hydrated, setHydrated] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameSetupOpen, setNameSetupOpen] = useState(false);
   const recordedJourneyRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const node = getJourneyNode(journey.nodeId);
@@ -341,14 +737,18 @@ export default function Home() {
       const savedLanguage = window.localStorage.getItem("safe-garden-language") as Language | null;
       const savedSupportMode = window.localStorage.getItem(SUPPORT_MODE_STORAGE_KEY) as SupportMode | null;
       const savedMusic = window.localStorage.getItem(MUSIC_STORAGE_KEY);
+      const savedPlayerName = window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY)?.trim() ?? "";
       setRecords(parsePracticeRecords(window.localStorage.getItem(PRACTICE_STORAGE_KEY)));
       if (savedCalm === "true" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         setReducedMotion(true);
         setMusicOn(false);
       }
-      if (savedLanguage === "zh" || savedLanguage === "en") setLanguage(savedLanguage);
-      if (savedSupportMode === "standard" || savedSupportMode === "picture") setSupportMode(savedSupportMode);
+      if (savedLanguage === "zh" || savedLanguage === "zh-TW" || savedLanguage === "en") setLanguage(savedLanguage);
+      if (savedSupportMode === "standard" || savedSupportMode === "picture" || savedSupportMode === "model-first") setSupportMode(savedSupportMode);
       if (savedCalm !== "true" && (savedMusic === "true" || savedMusic === "false")) setMusicOn(savedMusic === "true");
+      setPlayerName(savedPlayerName);
+      setNameDraft(savedPlayerName);
+      setNameSetupOpen(!savedPlayerName);
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(hydrationTask);
@@ -377,27 +777,56 @@ export default function Home() {
     window.localStorage.setItem(MUSIC_STORAGE_KEY, String(musicOn));
   }, [musicOn, hydrated]);
 
-  useEffect(() => {
-    if (node.kind !== "ending" || recordedJourneyRef.current === journey.journeyId) return;
-    const record = createPracticeRecord(journey);
-    recordedJourneyRef.current = journey.journeyId;
-    setCompletedRecord(record);
-    setRecords((current) => {
-      const next = savePracticeRecord(current, record);
-      window.localStorage.setItem(PRACTICE_STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  }, [journey, node.kind]);
-
-  const coachCard = useMemo(() => {
+  const reviewedCoachCard = useMemo(() => {
     const record = completedRecord ?? records[0];
     if (!record) return null;
-    const fallback = buildReviewedCoachCard(record, language);
-    return applyConstrainedAgentEnhancement(fallback, null);
+    return buildReviewedCoachCard(record, language);
   }, [completedRecord, records, language]);
+
+  const coachCard = agentCoach ?? reviewedCoachCard;
+
+  const requestAgentCoach = async (record: PracticeRecord, signal?: AbortSignal) => {
+    const fallback = buildReviewedCoachCard(record, language);
+    setAgentCoach(fallback);
+    setAgentStatus("loading");
+    try {
+      const response = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal,
+        body: JSON.stringify({
+          language,
+          supportMode,
+          initialConsent: record.initialConsent,
+          actions: record.events.map((event) => event.action),
+        }),
+      });
+      const payload = await response.json() as { ok?: boolean; candidate?: Parameters<typeof applyConstrainedAgentEnhancement>[1] };
+      const next = applyConstrainedAgentEnhancement(fallback, payload.ok ? payload.candidate : null);
+      setAgentCoach(next);
+      setAgentStatus(next.source === "constrained-agent" ? "adapted" : "fallback");
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return;
+      setAgentCoach(fallback);
+      setAgentStatus("fallback");
+    }
+  };
+
+  useEffect(() => {
+    if (!completedRecord) return;
+    const controller = new AbortController();
+    const task = window.setTimeout(() => void requestAgentCoach(completedRecord, controller.signal), 0);
+    return () => {
+      window.clearTimeout(task);
+      controller.abort();
+    };
+    // support mode and language intentionally produce a fresh bounded adaptation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedRecord, language, supportMode]);
 
   const startJourney = async () => {
     setStarted(true);
+    setGamePhase("explore");
     if (musicOn && audioRef.current) {
       audioRef.current.volume = 0.28;
       try { await audioRef.current.play(); } catch { setMusicOn(false); }
@@ -421,16 +850,63 @@ export default function Home() {
     if (next) setMusicOn(false);
   };
 
+  const savePlayerName = () => {
+    const nextName = nameDraft.trim().slice(0, 16);
+    if (!nextName) return;
+    setPlayerName(nextName);
+    setNameDraft(nextName);
+    setNameSetupOpen(false);
+    window.localStorage.setItem(PLAYER_NAME_STORAGE_KEY, nextName);
+  };
+
+  const cycleLanguage = () => {
+    setLanguage(language === "en" ? "zh" : language === "zh" ? "zh-TW" : "en");
+  };
+
   const handleAdvance = (choiceId?: JourneyChoice["id"]) => {
-    setJourney((current) => advanceJourney(current, choiceId));
+    const next = advanceJourney(journey, choiceId);
+    setJourney(next);
+    if (getJourneyNode(next.nodeId).kind === "ending") setGamePhase("plant");
+  };
+
+  const collectDiscovery = (item: DiscoveryId) => {
+    setDiscoveries((current) => current.includes(item) ? current : [...current, item]);
+  };
+
+  const beginBoundaryPractice = () => {
+    if (discoveries.length < 2) return;
+    setGamePhase("journey");
+  };
+
+  const plantPractice = (gardenPlot: number) => {
+    if (node.kind !== "ending" || recordedJourneyRef.current === journey.journeyId) return;
+    const record = createPracticeRecord(journey, new Date().toISOString(), {
+      discoveries,
+      gardenPlot,
+      supportMode,
+    });
+    recordedJourneyRef.current = journey.journeyId;
+    setCompletedRecord(record);
+    setAgentCoach(null);
+    setRecords((current) => {
+      const next = savePracticeRecord(current, record);
+      window.localStorage.setItem(PRACTICE_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+    setGamePhase("complete");
   };
 
   const restart = () => {
     const next = createJourneyState();
     recordedJourneyRef.current = null;
     setCompletedRecord(null);
+    setAgentCoach(null);
+    setAgentStatus("idle");
+    setDiscoveries([]);
+    setDemonstratedNodes([]);
     setJourney(next);
     setStarted(true);
+    setGamePhase("explore");
   };
 
   const openPanelView = (view: PanelView) => {
@@ -450,7 +926,10 @@ export default function Home() {
 
   const launchJourney = () => {
     if (node.kind === "ending") restart();
-    else setStarted(true);
+    else {
+      setStarted(true);
+      setGamePhase(discoveries.length >= 2 ? "journey" : "explore");
+    }
     setSettingsOpen(false);
     setPanelView("home");
     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
@@ -460,7 +939,7 @@ export default function Home() {
     const date = new Date(value);
     const now = new Date();
     if (date.toDateString() === now.toDateString()) return t.today;
-    return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", {
+    return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : language === "zh-TW" ? "zh-TW" : "en", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -472,8 +951,14 @@ export default function Home() {
       .map((event) => event.action)
       .filter((action) => ["step-back", "repeat-boundary", "leave", "seek-help"].includes(action)),
   ).size;
+  const plantedPlots = new Set(records.map((record, index) => record.gardenPlot ?? (index % 8)));
+  const gardenIsFull = plantedPlots.size >= 8;
 
-  const progressIndex = !started ? 0 : node.kind === "ending" ? 3 : ["ask-consent", "respect-accept", "respect-space"].includes(node.id) ? 1 : 2;
+  const progressIndex = gamePhase === "welcome" || gamePhase === "explore"
+    ? 0
+    : gamePhase === "plant" || gamePhase === "complete"
+      ? 3
+      : ["ask-consent", "respect-accept", "respect-space"].includes(node.id) ? 1 : 2;
   const progressItems = [
     { icon: <HomeIcon />, label: t.progressHome },
     { icon: <Trees />, label: t.progressPark },
@@ -484,6 +969,28 @@ export default function Home() {
   return (
     <main className={`app-shell ${reducedMotion ? "reduced-motion" : ""} ${supportMode === "picture" ? "picture-support" : ""}`}>
       <audio ref={audioRef} src="/assets/garden-music.mp3" loop preload="metadata" />
+
+      {hydrated && nameSetupOpen && (
+        <div className="name-onboarding" role="dialog" aria-modal="true" aria-labelledby="name-title">
+          <form className="name-card" onSubmit={(event) => { event.preventDefault(); savePlayerName(); }}>
+            <div className="name-language" aria-label={t.languageLabel}>
+              <button type="button" className={language === "en" ? "selected" : ""} aria-pressed={language === "en"} onClick={() => setLanguage("en")}>English</button>
+              <button type="button" className={language === "zh" ? "selected" : ""} aria-pressed={language === "zh"} onClick={() => setLanguage("zh")}>简体</button>
+              <button type="button" className={language === "zh-TW" ? "selected" : ""} aria-pressed={language === "zh-TW"} onClick={() => setLanguage("zh-TW")}>繁體</button>
+            </div>
+            <div className="name-avatar"><img src="/assets/fox-avatar.png" alt="" /></div>
+            <p className="eyebrow">{t.brand}</p>
+            <h1 id="name-title">{t.nameTitle}</h1>
+            <p className="name-intro">{t.nameIntro}</p>
+            <label className="name-field">
+              <span>{t.nameLabel}</span>
+              <input autoFocus autoComplete="off" maxLength={16} value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} placeholder={t.namePlaceholder} />
+            </label>
+            <button className="primary-button name-submit" type="submit" disabled={!nameDraft.trim()}>{t.saveName}<ArrowRight aria-hidden="true" /></button>
+            <p className="name-hint">{t.nameHint}</p>
+          </form>
+        </div>
+      )}
 
       <section className="story-stage" aria-label={t.todaysWalk}>
         <div className="park-background" />
@@ -500,7 +1007,7 @@ export default function Home() {
               <button type="button" onClick={toggleMusic} aria-label={musicOn ? t.musicOn : t.musicOff} title={musicOn ? t.musicOn : t.musicOff}>
                 {musicOn ? <Music2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
               </button>
-              <button type="button" onClick={() => setLanguage(language === "en" ? "zh" : "en")} aria-label="Change language">
+              <button type="button" onClick={cycleLanguage} aria-label="Change language">
                 {t.language}
               </button>
             </div>
@@ -516,7 +1023,7 @@ export default function Home() {
               <span className="welcome-sprout" aria-hidden="true"><span className="growth-icon stage-sprout" /></span>
               <p className="eyebrow">{t.brand}</p>
               <h1 id="welcome-title">{t.welcomeTitle}</h1>
-              <p className="welcome-copy">{t.welcomeBody}</p>
+              <p className="welcome-copy">{personalizedText(t.welcomeBody, language, playerName)}</p>
               <div className="support-settings">
                 <label className="setting-row">
                   <span><strong>{t.calmLabel}</strong><small>{t.calmHint}</small></span>
@@ -529,21 +1036,59 @@ export default function Home() {
                   <span className="switch" aria-hidden="true" />
                 </label>
               </div>
+              <div className="welcome-support-picker" aria-label={t.supportMode}>
+                <button type="button" className={supportMode === "standard" ? "selected" : ""} aria-pressed={supportMode === "standard"} onClick={() => setSupportMode("standard")}><NotebookText aria-hidden="true" /><span>{gameCopy[language].standardShort}</span></button>
+                <button type="button" className={supportMode === "picture" ? "selected" : ""} aria-pressed={supportMode === "picture"} onClick={() => setSupportMode("picture")}><Flower2 aria-hidden="true" /><span>{gameCopy[language].pictureShort}</span></button>
+                <button type="button" className={supportMode === "model-first" ? "selected" : ""} aria-pressed={supportMode === "model-first"} onClick={() => setSupportMode("model-first")}><WandSparkles aria-hidden="true" /><span>{gameCopy[language].modelShort}</span></button>
+              </div>
               <button className="primary-button" type="button" onClick={startJourney}>{t.start}<ArrowRight aria-hidden="true" /></button>
               <p className="safety-note">{t.safeNote}</p>
             </div>
           </div>
         )}
 
-        {started && node.kind !== "ending" && <JourneyDialogue node={node} language={language} onAdvance={handleAdvance} />}
+        {gamePhase === "explore" && (
+          <ExplorationLayer language={language} discovered={discoveries} onDiscover={collectDiscovery} onVisitPuppy={beginBoundaryPractice} />
+        )}
 
-        {node.kind === "ending" && (
+        {gamePhase === "journey" && node.kind !== "ending" && (
+          <JourneyDialogue
+            node={node}
+            language={language}
+            playerName={playerName}
+            supportMode={supportMode}
+            reducedMotion={reducedMotion}
+            demonstrated={demonstratedNodes.includes(node.id)}
+            onDemonstrate={() => setDemonstratedNodes((current) => current.includes(node.id) ? current : [...current, node.id])}
+            onAdvance={handleAdvance}
+          />
+        )}
+
+        {gamePhase === "plant" && node.kind === "ending" && (
+          <div className="completion-overlay plant-overlay" role="dialog" aria-labelledby="plant-title">
+            <div className="completion-card planting-card">
+              <div className="seed-gift" aria-hidden="true"><span className="growth-icon stage-seed" /><Sparkles /></div>
+              <p className="eyebrow">{gameCopy[language].seedFound}</p>
+              <h2 id="plant-title">{gameCopy[language].choosePlot}</h2>
+              <p>{gameCopy[language].choosePlotIntro}</p>
+              <div className="planting-grid">
+                {Array.from({ length: 8 }, (_, index) => (
+                  <button type="button" key={index} className={plantedPlots.has(index) ? "occupied" : ""} disabled={!gardenIsFull && plantedPlots.has(index)} onClick={() => plantPractice(index)} aria-label={`${gameCopy[language].plantHere} ${index + 1}`}>
+                    <span className="growth-stage stage-seed" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {gamePhase === "complete" && node.kind === "ending" && (
           <div className="completion-overlay" role="dialog" aria-labelledby="garden-title">
             <div className="completion-card">
               <div className="growth-sprite" aria-hidden="true"><img src="/assets/growth.png" alt="" /></div>
               <p className="eyebrow">{t.ourGarden}</p>
               <h2 id="garden-title">{t.gardenTitle}</h2>
-              <p>{node.text[language]}</p>
+              <p>{personalizedText(node.text[language], language, playerName)}</p>
               <div className="completion-actions">
                 <button className="primary-button" type="button" onClick={restart}>{t.replay}<RotateCcw aria-hidden="true" /></button>
               </div>
@@ -565,7 +1110,7 @@ export default function Home() {
       <aside className={`parent-panel ${node.kind === "ending" || panelView !== "home" || settingsOpen ? "mobile-visible" : ""}`} aria-label={t.forParents}>
         <header className="profile-header">
           <div className="profile-avatar"><img className="profile-avatar-image" src="/assets/fox-avatar.png" alt="" /></div>
-          <div><strong>Little Fox</strong><span>{language === "en" ? "Today’s practice" : "今天的练习"}</span></div>
+          <div><strong>{playerName || t.defaultPlayerName}</strong><span>{t.todayPractice}</span></div>
           <button type="button" aria-label={t.settings} aria-expanded={settingsOpen} onClick={openSettings}><Settings aria-hidden="true" /></button>
         </header>
 
@@ -578,10 +1123,18 @@ export default function Home() {
               </header>
               <p className="panel-intro">{t.settingsIntro}</p>
               <div className="settings-group">
+                <h3>{t.nameSettingsLabel}</h3>
+                <form className="settings-name-form" onSubmit={(event) => { event.preventDefault(); savePlayerName(); }}>
+                  <input maxLength={16} value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} aria-label={t.nameSettingsLabel} />
+                  <button type="submit" disabled={!nameDraft.trim()}>{t.updateName}</button>
+                </form>
+              </div>
+              <div className="settings-group">
                 <h3>{t.languageLabel}</h3>
                 <div className="segmented-control">
                   <button type="button" className={language === "en" ? "selected" : ""} aria-pressed={language === "en"} onClick={() => setLanguage("en")}>{t.english}</button>
                   <button type="button" className={language === "zh" ? "selected" : ""} aria-pressed={language === "zh"} onClick={() => setLanguage("zh")}>{t.chinese}</button>
+                  <button type="button" className={language === "zh-TW" ? "selected" : ""} aria-pressed={language === "zh-TW"} onClick={() => setLanguage("zh-TW")}>{t.traditionalChinese}</button>
                 </div>
               </div>
               <div className="settings-group">
@@ -592,6 +1145,9 @@ export default function Home() {
                 <button className={`support-option ${supportMode === "picture" ? "selected" : ""}`} type="button" aria-pressed={supportMode === "picture"} onClick={() => setSupportMode("picture")}>
                   <span className="support-option-icon"><Flower2 aria-hidden="true" /></span><span><strong>{t.pictureSupport}</strong><small>{t.pictureSupportHint}</small></span><Check aria-hidden="true" />
                 </button>
+                <button className={`support-option ${supportMode === "model-first" ? "selected" : ""}`} type="button" aria-pressed={supportMode === "model-first"} onClick={() => setSupportMode("model-first")}>
+                  <span className="support-option-icon"><WandSparkles aria-hidden="true" /></span><span><strong>{gameCopy[language].modelSupport}</strong><small>{gameCopy[language].modelSupportHint}</small></span><Check aria-hidden="true" />
+                </button>
               </div>
               <div className="settings-group setting-toggles">
                 <label className="setting-row"><span><strong>{t.calmLabel}</strong><small>{t.calmHint}</small></span><input type="checkbox" checked={reducedMotion} onChange={(event) => setCalmMode(event.target.checked)} /><span className="switch" aria-hidden="true" /></label>
@@ -601,18 +1157,30 @@ export default function Home() {
           ) : panelView === "home" ? (
             <>
           <section className="coach-card observation-card">
-            <div className="card-title"><span className="title-growth stage-sprout" aria-hidden="true" /><h2>{node.kind === "ending" ? t.observedTitle : t.forParents}</h2></div>
-            {node.kind === "ending" && coachCard ? (
-              <><strong className="gentle-success">{t.completedLabel}</strong><p>{coachCard.observation}</p></>
+            <div className="card-title"><span className="title-growth stage-sprout" aria-hidden="true" /><h2>{gamePhase === "complete" ? t.observedTitle : t.forParents}</h2></div>
+            {gamePhase === "complete" && coachCard ? (
+              <><strong className="gentle-success">{t.completedLabel}</strong><p>{personalizedText(coachCard.observation, language, playerName)}</p></>
             ) : <p>{t.parentWaiting}</p>}
-            <div className={`mini-growth ${node.kind === "ending" ? "stage-flower bloomed" : "stage-sprout"}`} aria-hidden="true" />
+            <div className={`mini-growth ${gamePhase === "complete" ? "stage-flower bloomed" : "stage-sprout"}`} aria-hidden="true" />
           </section>
 
           <section className="coach-card tonight-card">
             <div className="card-title"><Lightbulb aria-hidden="true" /><h2>{t.tonight}</h2></div>
+            {gamePhase === "complete" && (
+              <div className={`coach-source source-${agentStatus}`} aria-live="polite">
+                <WandSparkles aria-hidden="true" />
+                <span>{agentStatus === "loading" ? gameCopy[language].coachLoading : agentStatus === "adapted" ? gameCopy[language].coachAdapted : agentStatus === "fallback" ? gameCopy[language].coachFallback : gameCopy[language].coachReviewed}</span>
+              </div>
+            )}
             <p>{t.askAtCalmMoment}</p>
-            <blockquote>{coachCard?.tonightPrompt ?? (language === "en" ? "“Who are the adults you can ask for help?”" : "“你可以向哪些大人求助？”")}</blockquote>
-            <p className="parent-reply">{coachCard?.parentReply ?? (language === "en" ? "Listen first, then thank the child for telling you." : "先听孩子说完，再谢谢孩子愿意告诉你。")}</p>
+            <blockquote>{coachCard?.tonightPrompt ?? t.defaultTonightPrompt}</blockquote>
+            <p className="parent-reply">{coachCard?.parentReply ?? t.defaultParentReply}</p>
+            {coachCard && gamePhase === "complete" && (
+              <div className="next-focus"><strong>{gameCopy[language].nextFocus}</strong><p>{coachCard.nextFocus}</p></div>
+            )}
+            {completedRecord && gamePhase === "complete" && agentStatus !== "loading" && (
+              <button className="coach-refresh" type="button" onClick={() => void requestAgentCoach(completedRecord)}><WandSparkles aria-hidden="true" />{gameCopy[language].refreshCoach}</button>
+            )}
           </section>
 
           <section className="coach-card garden-card">
@@ -656,12 +1224,12 @@ export default function Home() {
               <p className="panel-intro">{t.gardenViewIntro}</p>
               <div className="garden-view-bed" aria-label={t.practicesRecorded(records.length)}>
                 {Array.from({ length: 8 }, (_, index) => (
-                  <span className={`garden-plot ${index < Math.min(records.length, 8) ? "completed" : "open"}`} key={index}>
-                    <span className={`growth-stage ${index < Math.min(records.length, 8) ? "stage-flower" : "stage-seed"}`} />
+                  <span className={`garden-plot ${plantedPlots.has(index) ? "completed" : "open"}`} key={index}>
+                    <span className={`growth-stage ${plantedPlots.has(index) ? "stage-flower" : "stage-seed"}`} />
                   </span>
                 ))}
               </div>
-              <div className="garden-summary"><strong>{t.practicesRecorded(records.length)}</strong><span>{t.openPlots}: {Math.max(0, 8 - records.length)}</span></div>
+              <div className="garden-summary"><strong>{t.practicesRecorded(records.length)}</strong><span>{t.openPlots}: {Math.max(0, 8 - plantedPlots.size)}</span></div>
               <p className="panel-disclaimer">{t.safeNote}</p>
             </section>
           ) : (
@@ -674,7 +1242,7 @@ export default function Home() {
                   {records.map((record, index) => (
                     <article className="history-entry" key={record.id}>
                       <span className="history-growth stage-flower" aria-hidden="true" />
-                      <div><strong>{t.practiceNumber(records.length - index)}</strong><span className="history-date"><CalendarDays aria-hidden="true" />{formatPracticeDate(record.completedAt)}</span><p>{record.initialConsent === "space" ? t.initialChoiceSpace : t.initialChoiceAccept} {t.safetyActions(safetyActionCount(record))}</p></div>
+                      <div><strong>{t.practiceNumber(records.length - index)}</strong><span className="history-date"><CalendarDays aria-hidden="true" />{formatPracticeDate(record.completedAt)}</span><p>{personalizedText(record.initialConsent === "space" ? t.initialChoiceSpace : t.initialChoiceAccept, language, playerName)} {t.safetyActions(safetyActionCount(record))}</p></div>
                     </article>
                   ))}
                 </div>

@@ -22,7 +22,7 @@ test("server-renders The Safe Garden experience", async () => {
   const html = await response.text();
   assert.match(html, /<title>The Safe Garden — Practice brave words together<\/title>/i);
   assert.match(html, /The Safe Garden/);
-  assert.match(html, /Little Fox will practice what to do when a friend comes too close/);
+  assert.match(html, /Explore the park, collect two small treasures/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -70,7 +70,33 @@ test("parent navigation and family settings are functional", async () => {
   assert.match(pageSource, /onClick=\{\(\) => openPanelView\("notes"\)\}/);
   assert.match(pageSource, /setSettingsOpen\(true\)/);
   assert.match(pageSource, /safe-garden-support-mode/);
+  assert.match(pageSource, /"model-first"/);
   assert.match(pageSource, /records\.map\(\(record, index\)/);
+});
+
+test("the finished game loop includes exploration, physical actions, and garden placement", async () => {
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(pageSource, /function ExplorationLayer/);
+  assert.match(pageSource, /collectDiscovery/);
+  assert.match(pageSource, /HoldToSpeakButton/);
+  assert.match(pageSource, /plantPractice/);
+  assert.match(styles, /\.world-hotspot/);
+  assert.match(styles, /\.planting-grid/);
+});
+
+test("DeepSeek is server-side, anonymous, constrained, and safely optional", async () => {
+  const [routeSource, envExample] = await Promise.all([
+    readFile(new URL("../app/api/coach/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../.env.example", import.meta.url), "utf8"),
+  ]);
+  assert.match(routeSource, /process\.env\.DEEPSEEK_API_KEY/);
+  assert.doesNotMatch(routeSource, /playerName|childName/);
+  assert.match(routeSource, /reviewed-template/);
+  assert.match(routeSource, /isSafeCoachEnhancement/);
+  assert.doesNotMatch(envExample, /NEXT_PUBLIC_DEEPSEEK/);
 });
 
 test("garden plots preserve complete growth artwork", async () => {
@@ -96,4 +122,22 @@ test("calm mode stops motion instead of accelerating infinite animation", async 
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(styles, /\.reduced-motion \*::after \{ animation: none !important; transition: none !important;/);
   assert.doesNotMatch(styles, /\.reduced-motion \*::after \{[^}]*animation-duration:\s*\.01ms/s);
+});
+
+test("first-time naming is persisted and personalized throughout the journey", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /const PLAYER_NAME_STORAGE_KEY = "safe-garden-player-name"/);
+  assert.match(pageSource, /setNameSetupOpen\(!savedPlayerName\)/);
+  assert.match(pageSource, /window\.localStorage\.setItem\(PLAYER_NAME_STORAGE_KEY, nextName\)/);
+  assert.match(pageSource, /personalizedText\(node\.text\[language\], language, playerName\)/);
+  assert.match(pageSource, /<strong>\{playerName \|\| t\.defaultPlayerName\}<\/strong>/);
+  assert.match(pageSource, /defaultPlayerName: "小狐狸"/);
+});
+
+test("language controls include persisted Traditional Chinese", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /savedLanguage === "zh-TW"/);
+  assert.match(pageSource, /onClick=\{\(\) => setLanguage\("zh-TW"\)\}>繁體<\/button>/);
+  assert.match(pageSource, /traditionalChinese: "繁體中文"/);
+  assert.match(pageSource, /language === "zh-TW" \? "zh-TW" : "en"/);
 });
