@@ -145,7 +145,7 @@ test("garden plots preserve complete growth artwork", async () => {
   assert.match(styles, /\.garden-plot \.growth-stage\s*\{[^}]*height:\s*100%;/s);
   assert.doesNotMatch(styles, /\.garden-plot\s*\{[^}]*height:\s*108px;/s);
   assert.match(styles, /\.garden-bed\s*\{[^}]*height:\s*148px;/s);
-  assert.match(styles, /\.garden-bed \.growth-stage\s*\{[^}]*height:\s*132px;[^}]*background-size:\s*330% auto;[^}]*background-position-y:\s*43\.5%;/s);
+  assert.match(styles, /\.garden-bed \.growth-stage\s*\{[^}]*height:\s*132px;[^}]*background-size:\s*400% auto;[^}]*background-position-y:\s*43\.5%;/s);
   assert.match(styles, /\.mini-growth\.stage-flower\s*\{[^}]*growth-flower\.webp[^}]*background-size:\s*contain;/s);
   assert.match(styles, /\.history-growth\.stage-flower\s*\{[^}]*growth-flower\.webp[^}]*contain/s);
   assert.match(styles, /\.garden-plot\.completed \.growth-stage\.stage-flower\s*\{[^}]*growth-flower\.webp[^}]*contain/s);

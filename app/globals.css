@@ -568,7 +568,7 @@ button { color: inherit; }
 .garden-bed .flower-grown { animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); filter: none; }
 .garden-bed .growth-stage {
   height: 132px;
-  background-size: 330% auto;
+  background-size: 400% auto;
   background-position-y: 43.5%;
 }
 .panel-disclaimer { margin: 0; text-align: center; color: #a28d73; font-size: 10px; }
