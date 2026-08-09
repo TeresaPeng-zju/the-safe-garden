@@ -162,6 +162,12 @@ button { color: inherit; }
   backdrop-filter: blur(14px);
 }
 
+.stage-left-stack {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+
 .today-card {
   min-width: 280px;
   display: flex;
@@ -206,12 +212,10 @@ button { color: inherit; }
 .garden-shortcut small { font-weight: 700; }
 
 .stage-tools {
-  position: absolute;
   z-index: 10;
-  top: clamp(132px, 15vw, 150px);
-  left: clamp(20px, 3vw, 38px);
   display: flex;
   gap: 8px;
+  pointer-events: auto;
 }
 
 .stage-tools button {
@@ -538,7 +542,7 @@ button { color: inherit; }
   .garden-shortcut { min-width: 66px; padding: 7px 9px; border-radius: 18px; }
   .garden-shortcut span { font-size: 24px; }
   .garden-shortcut small { font-size: 9px; }
-  .stage-tools { top: 88px; left: 14px; }
+  .stage-left-stack { gap: 12px; }
   .dialogue, .safety-dialogue { left: 14px; right: 14px; top: 29%; width: auto; }
   .response-dialogue { top: 31%; }
   .speech-bubble { max-width: 100%; padding: 14px 16px; font-size: 15px; }

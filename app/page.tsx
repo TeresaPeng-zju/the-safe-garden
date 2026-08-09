@@ -338,23 +338,24 @@ export default function Home() {
         <IllustratedCharacters node={node} reducedMotion={reducedMotion} />
 
         <header className="stage-header">
-          <div className="today-card">
-            <span className="flower-mark" aria-hidden="true"><Flower2 /></span>
-            <div><strong>{t.todaysWalk}</strong><span>{t.park}</span></div>
+          <div className="stage-left-stack">
+            <div className="today-card">
+              <span className="flower-mark" aria-hidden="true"><Flower2 /></span>
+              <div><strong>{t.todaysWalk}</strong><span>{t.park}</span></div>
+            </div>
+            <div className="stage-tools">
+              <button type="button" onClick={toggleMusic} aria-label={musicOn ? t.musicOn : t.musicOff} title={musicOn ? t.musicOn : t.musicOff}>
+                {musicOn ? <Music2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
+              </button>
+              <button type="button" onClick={() => setLanguage(language === "en" ? "zh" : "en")} aria-label="Change language">
+                {t.language}
+              </button>
+            </div>
           </div>
           <div className="garden-shortcut" aria-label={t.ourGarden}>
             <span className="growth-icon stage-sprout" aria-hidden="true" /><small>{t.ourGarden}</small>
           </div>
         </header>
-
-        <div className="stage-tools">
-          <button type="button" onClick={toggleMusic} aria-label={musicOn ? t.musicOn : t.musicOff} title={musicOn ? t.musicOn : t.musicOff}>
-            {musicOn ? <Music2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
-          </button>
-          <button type="button" onClick={() => setLanguage(language === "en" ? "zh" : "en")} aria-label="Change language">
-            {t.language}
-          </button>
-        </div>
 
         {!started && (
           <div className="welcome-overlay" role="dialog" aria-labelledby="welcome-title">
