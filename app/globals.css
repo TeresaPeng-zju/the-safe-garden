@@ -540,9 +540,9 @@ button { color: inherit; }
 .future-journey .journey-card-icon { color: #978873; background: #eee7da; }
 .future-journey small { display: inline-block; margin-top: 7px; padding: 3px 7px; border-radius: 999px; color: #786b57; background: #eee5d4; font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
 
-.garden-view-bed { min-height: 270px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; padding: 18px 12px 13px; border-radius: 24px; background: linear-gradient(180deg, #e7eccb 0 68%, #b88a55 69% 79%, #8e643f 80%); overflow: hidden; }
-.garden-plot { min-width: 0; height: 108px; display: grid; place-items: end center; border-bottom: 2px solid rgba(91,64,41,.13); }
-.garden-plot .growth-stage { width: 100%; height: 105px; flex: none; }
+.garden-view-bed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; border: 1px solid rgba(112,134,79,.12); border-radius: 24px; background: #e7eccb; overflow: hidden; }
+.garden-plot { min-width: 0; width: 100%; aspect-ratio: 1; display: grid; place-items: center; padding: 6px; border-radius: 17px; background: linear-gradient(180deg, rgba(244,247,222,.78) 0 72%, #bd9059 73% 82%, #956943 83% 100%); overflow: hidden; }
+.garden-plot .growth-stage { width: 100%; height: 100%; flex: none; }
 .garden-plot.open { opacity: .45; filter: grayscale(.25); }
 .garden-plot.completed .growth-stage { animation: flowerPop .65s cubic-bezier(.2,.9,.2,1.15) both; }
 .garden-summary { display: grid; gap: 3px; padding: 13px 15px; border-radius: 17px; background: rgba(255,252,244,.78); text-align: center; }

@@ -72,3 +72,10 @@ test("parent navigation and family settings are functional", async () => {
   assert.match(pageSource, /safe-garden-support-mode/);
   assert.match(pageSource, /records\.map\(\(record, index\)/);
 });
+
+test("garden plots preserve complete growth artwork", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.garden-plot\s*\{[^}]*aspect-ratio:\s*1;/s);
+  assert.match(styles, /\.garden-plot \.growth-stage\s*\{[^}]*height:\s*100%;/s);
+  assert.doesNotMatch(styles, /\.garden-plot\s*\{[^}]*height:\s*108px;/s);
+});
