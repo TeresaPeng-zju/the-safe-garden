@@ -66,6 +66,17 @@ test("ships explicit browser and touch favicons", async () => {
   assert.match(layoutSource, /\/apple-touch-icon\.png/);
 });
 
+test("music controls play immediately and remain independent from reduced movement", async () => {
+  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(pageSource, /type MusicPlaybackState = "waiting" \| "starting" \| "playing" \| "paused" \| "error"/);
+  assert.match(pageSource, /const setMusicEnabled = \(next: boolean\)/);
+  assert.match(pageSource, /audio\.play\(\)/);
+  assert.match(pageSource, /musicWaiting: "开始散步后播放"/);
+  assert.doesNotMatch(pageSource, /disabled=\{reducedMotion\}/);
+  assert.match(pageSource, /const setCalmMode = \(next: boolean\) => \{\s*setReducedMotion\(next\);\s*\};/s);
+  assert.equal((pageSource.match(/onChange=\{\(event\) => setMusicEnabled\(event\.target\.checked\)\}/g) ?? []).length, 2);
+});
+
 test("uses artwork and icon components instead of emoji UI", async () => {
   const [pageSource, styles] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

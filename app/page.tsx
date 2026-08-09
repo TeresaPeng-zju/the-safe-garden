@@ -55,6 +55,7 @@ import {
 type PanelView = "home" | "journey" | "garden" | "notes" | "about";
 type GamePhase = "welcome" | "explore" | "journey" | "plant" | "complete";
 type AgentStatus = "idle" | "loading" | "adapted" | "fallback";
+type MusicPlaybackState = "waiting" | "starting" | "playing" | "paused" | "error";
 
 const SUPPORT_MODE_STORAGE_KEY = "safe-garden-support-mode";
 const MUSIC_STORAGE_KEY = "safe-garden-music";
@@ -66,9 +67,9 @@ const baseCopy = {
     brand: "The Safe Garden",
     welcomeTitle: "Ready for today’s little walk?",
     welcomeBody: "Explore the park, collect two small treasures, and practice what to do when a friend comes too close and does not stop.",
-    calmLabel: "Calm mode",
-    calmHint: "Less movement and no background music",
-    soundLabel: "Garden sounds",
+    calmLabel: "Reduced movement",
+    calmHint: "Keeps character and scene movement gentle; music is separate",
+    soundLabel: "Garden music",
     start: "Start today’s walk",
     todaysWalk: "Today’s Walk",
     park: "Explore, practice, and grow the garden.",
@@ -115,6 +116,10 @@ const baseCopy = {
     pictureSupportHint: "Makes action symbols easier to notice",
     on: "On",
     off: "Off",
+    musicWaiting: "Plays when the walk begins",
+    musicStarting: "Starting…",
+    musicPlaying: "Playing",
+    musicError: "Could not play. Turn it on to try again.",
     journeyLibrary: "Practice journeys",
     journeyLibraryIntro: "Choose one short, low-pressure situation to practice together.",
     activeJourney: "Hugs and body space",
@@ -156,8 +161,8 @@ const baseCopy = {
     brand: "安全花园",
     welcomeTitle: "准备好今天的小小散步了吗？",
     welcomeBody: "探索公园、收集两件小发现，再练习：当朋友靠得太近而且没有停下来时，可以怎么做。",
-    calmLabel: "安静模式",
-    calmHint: "减少动态，并关闭背景音乐",
+    calmLabel: "减少动态",
+    calmHint: "减少人物与场景动态，音乐可单独设置",
     soundLabel: "花园音乐",
     start: "开始今天的散步",
     todaysWalk: "今天的散步",
@@ -205,6 +210,10 @@ const baseCopy = {
     pictureSupportHint: "让动作符号更容易被注意到",
     on: "开启",
     off: "关闭",
+    musicWaiting: "开始散步后播放",
+    musicStarting: "正在启动…",
+    musicPlaying: "播放中",
+    musicError: "暂时无法播放，重新开启即可再试",
     journeyLibrary: "练习旅程",
     journeyLibraryIntro: "选择一个短小、低压力的生活情境，一起练习。",
     activeJourney: "拥抱与身体空间",
@@ -251,8 +260,8 @@ const copy = {
     brand: "安全花園",
     welcomeTitle: "準備好今天的小小散步了嗎？",
     welcomeBody: "探索公園、收集兩件小發現，再練習：當朋友靠得太近而且沒有停下來時，可以怎麼做。",
-    calmLabel: "安靜模式",
-    calmHint: "減少動態，並關閉背景音樂",
+    calmLabel: "減少動態",
+    calmHint: "減少人物與場景動態，音樂可單獨設定",
     soundLabel: "花園音樂",
     start: "開始今天的散步",
     todaysWalk: "今天的散步",
@@ -299,6 +308,10 @@ garden: "花園",
     pictureSupportHint: "讓動作符號更容易被注意到",
     on: "開啟",
     off: "關閉",
+    musicWaiting: "開始散步後播放",
+    musicStarting: "正在啟動…",
+    musicPlaying: "播放中",
+    musicError: "暫時無法播放，重新開啟即可再試",
     journeyLibrary: "練習旅程",
     journeyLibraryIntro: "選擇一個短小、低壓力的生活情境，一起練習。",
     activeJourney: "擁抱與身體空間",
@@ -788,6 +801,7 @@ export default function Home() {
   const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
   const [reducedMotion, setReducedMotion] = useState(false);
   const [musicOn, setMusicOn] = useState(true);
+  const [musicPlaybackState, setMusicPlaybackState] = useState<MusicPlaybackState>("waiting");
   const [panelView, setPanelView] = useState<PanelView>("home");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [supportMode, setSupportMode] = useState<SupportMode>("standard");
@@ -799,6 +813,15 @@ export default function Home() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const node = getJourneyNode(journey.nodeId);
   const t = copy[language];
+  const musicStatusText = musicPlaybackState === "error"
+    ? t.musicError
+    : !musicOn
+      ? t.off
+      : musicPlaybackState === "playing"
+        ? t.musicPlaying
+        : musicPlaybackState === "starting"
+          ? t.musicStarting
+          : t.musicWaiting;
 
   useEffect(() => {
     const hydrationTask = window.setTimeout(() => {
@@ -821,11 +844,14 @@ export default function Home() {
       }
       if (savedCalm === "true" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         setReducedMotion(true);
-        setMusicOn(false);
       }
       if (savedLanguage === "zh" || savedLanguage === "zh-TW" || savedLanguage === "en") setLanguage(savedLanguage);
       if (savedSupportMode === "standard" || savedSupportMode === "picture" || savedSupportMode === "model-first") setSupportMode(savedSupportMode);
-      if (savedCalm !== "true" && (savedMusic === "true" || savedMusic === "false")) setMusicOn(savedMusic === "true");
+      if (savedMusic === "true" || savedMusic === "false") {
+        const shouldPlayMusic = savedMusic === "true";
+        setMusicOn(shouldPlayMusic);
+        setMusicPlaybackState(shouldPlayMusic ? "waiting" : "paused");
+      }
       setPlayerName(savedPlayerName);
       setNameDraft(savedPlayerName);
       setNameSetupOpen(!savedPlayerName);
@@ -837,9 +863,6 @@ export default function Home() {
   useEffect(() => {
     if (!hydrated) return;
     window.localStorage.setItem("safe-garden-calm", String(reducedMotion));
-    if (reducedMotion) {
-      audioRef.current?.pause();
-    }
   }, [reducedMotion, hydrated]);
 
   useEffect(() => {
@@ -910,30 +933,49 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completedRecord, language, supportMode]);
 
-  const startJourney = async () => {
-    setStarted(true);
-    setGamePhase("explore");
-    if (musicOn && audioRef.current) {
-      audioRef.current.volume = 0.28;
-      try { await audioRef.current.play(); } catch { setMusicOn(false); }
+  const playGardenMusic = () => {
+    const audio = audioRef.current;
+    if (!audio) {
+      setMusicOn(false);
+      setMusicPlaybackState("error");
+      return;
+    }
+
+    audio.volume = 0.28;
+    setMusicPlaybackState("starting");
+    try {
+      const playback = audio.play();
+      void playback.catch(() => {
+        setMusicOn(false);
+        setMusicPlaybackState("error");
+      });
+    } catch {
+      setMusicOn(false);
+      setMusicPlaybackState("error");
     }
   };
 
-  const toggleMusic = async () => {
-    const next = !musicOn;
+  const setMusicEnabled = (next: boolean) => {
     setMusicOn(next);
-    if (!audioRef.current) return;
     if (next) {
-      audioRef.current.volume = 0.28;
-      try { await audioRef.current.play(); } catch { setMusicOn(false); }
-    } else {
-      audioRef.current.pause();
+      playGardenMusic();
+      return;
     }
+
+    audioRef.current?.pause();
+    setMusicPlaybackState("paused");
   };
+
+  const startJourney = () => {
+    setStarted(true);
+    setGamePhase("explore");
+    if (musicOn) playGardenMusic();
+  };
+
+  const toggleMusic = () => setMusicEnabled(!musicOn);
 
   const setCalmMode = (next: boolean) => {
     setReducedMotion(next);
-    if (next) setMusicOn(false);
   };
 
   const savePlayerName = () => {
@@ -1074,7 +1116,18 @@ for (const record of records) {
 
   return (
     <main className={`app-shell ${reducedMotion ? "reduced-motion" : ""} ${supportMode === "picture" ? "picture-support" : ""}`}>
-      <audio ref={audioRef} src="/assets/garden-music.mp3" loop preload="metadata" />
+      <audio
+        ref={audioRef}
+        src="/assets/garden-music.mp3"
+        loop
+        preload="metadata"
+        onPlay={() => setMusicPlaybackState("playing")}
+        onPause={() => setMusicPlaybackState((current) => current === "error" ? current : "paused")}
+        onError={() => {
+          setMusicOn(false);
+          setMusicPlaybackState("error");
+        }}
+      />
 
       {hydrated && nameSetupOpen && (
         <div className="name-onboarding" role="dialog" aria-modal="true" aria-labelledby="name-title">
@@ -1137,8 +1190,8 @@ for (const record of records) {
                   <span className="switch" aria-hidden="true" />
                 </label>
                 <label className="setting-row">
-                  <span><strong>{t.soundLabel}</strong><small>{musicOn ? t.on : t.off}</small></span>
-                  <input type="checkbox" checked={musicOn} disabled={reducedMotion} onChange={(event) => setMusicOn(event.target.checked)} />
+                  <span><strong>{t.soundLabel}</strong><small aria-live="polite">{musicStatusText}</small></span>
+                  <input type="checkbox" checked={musicOn} onChange={(event) => setMusicEnabled(event.target.checked)} />
                   <span className="switch" aria-hidden="true" />
                 </label>
               </div>
@@ -1257,7 +1310,7 @@ for (const record of records) {
               </div>
               <div className="settings-group setting-toggles">
                 <label className="setting-row"><span><strong>{t.calmLabel}</strong><small>{t.calmHint}</small></span><input type="checkbox" checked={reducedMotion} onChange={(event) => setCalmMode(event.target.checked)} /><span className="switch" aria-hidden="true" /></label>
-                <label className="setting-row"><span><strong>{t.soundLabel}</strong><small>{musicOn ? t.on : t.off}</small></span><input type="checkbox" checked={musicOn} disabled={reducedMotion} onChange={() => void toggleMusic()} /><span className="switch" aria-hidden="true" /></label>
+                <label className="setting-row"><span><strong>{t.soundLabel}</strong><small aria-live="polite">{musicStatusText}</small></span><input type="checkbox" checked={musicOn} onChange={(event) => setMusicEnabled(event.target.checked)} /><span className="switch" aria-hidden="true" /></label>
               </div>
             </section>
           ) : panelView === "home" ? (
