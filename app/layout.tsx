@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 
+const FAVICON_VERSION = "20260810";
+
 export async function generateMetadata(): Promise<Metadata> {
   const headerStore = await headers();
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "localhost:3000";
@@ -13,11 +15,12 @@ export async function generateMetadata(): Promise<Metadata> {
     description: "从小树（化名）的真实需要出发：一段具体、视觉化、可重复、不评分的身体边界亲子练习。",
     icons: {
       icon: [
-        { url: "/favicon.ico", sizes: "32x32" },
-        { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
-        { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+        { url: `/favicon-32x32.png?v=${FAVICON_VERSION}`, type: "image/png", sizes: "32x32" },
+        { url: `/favicon-16x16.png?v=${FAVICON_VERSION}`, type: "image/png", sizes: "16x16" },
+        { url: `/favicon.ico?v=${FAVICON_VERSION}`, sizes: "32x32" },
       ],
-      apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
+      shortcut: [{ url: `/favicon.ico?v=${FAVICON_VERSION}`, sizes: "32x32" }],
+      apple: [{ url: `/apple-touch-icon.png?v=${FAVICON_VERSION}`, type: "image/png", sizes: "180x180" }],
     },
     openGraph: {
       title: "The Safe Garden",

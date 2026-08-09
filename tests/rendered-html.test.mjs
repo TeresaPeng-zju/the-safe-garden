@@ -59,11 +59,14 @@ test("Vercel excludes source artwork without excluding public game assets", asyn
 
 test("ships explicit browser and touch favicons", async () => {
   const layoutSource = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  assert.match(layoutSource, /const FAVICON_VERSION = "20260810"/);
   assert.match(layoutSource, /icons:\s*\{/);
   assert.match(layoutSource, /\/favicon\.ico/);
   assert.match(layoutSource, /\/favicon-32x32\.png/);
   assert.match(layoutSource, /\/favicon-16x16\.png/);
   assert.match(layoutSource, /\/apple-touch-icon\.png/);
+  assert.match(layoutSource, /shortcut:\s*\[/);
+  assert.match(layoutSource, /\?v=\$\{FAVICON_VERSION\}/);
 });
 
 test("music controls play immediately and remain independent from reduced movement", async () => {
