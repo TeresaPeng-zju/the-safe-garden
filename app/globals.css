@@ -832,7 +832,7 @@ button { color: inherit; }
 .coach-refresh { margin-top: 9px; min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; border: 1px solid #d8ccb5; border-radius: 11px; background: transparent; color: #816c54; cursor: pointer; font-size: 9px; font-weight: 900; }
 .coach-refresh svg { width: 14px; height: 14px; }
 
-.panel-nav { min-height: 91px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding: 10px 15px 14px; border-top: 1px solid rgba(147,119,76,.12); background: rgba(255,249,235,.8); }
+.panel-nav { min-height: 91px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; padding: 10px 15px 14px; border-top: 1px solid rgba(147,119,76,.12); background: rgba(255,249,235,.8); }
 .panel-nav button { height: 64px; border: 0; border-radius: 16px; display: grid; place-items: center; align-content: center; gap: 3px; background: transparent; color: #95846f; cursor: pointer; font-size: 10px; }
 .panel-nav button svg { width: 23px; height: 23px; stroke-width: 2; }
 .panel-nav button.active { color: #b96e2d; background: #f6ead1; }

@@ -63,7 +63,10 @@ test("uses artwork and icon components instead of emoji UI", async () => {
 });
 
 test("parent navigation and family settings are functional", async () => {
-  const pageSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
   assert.match(pageSource, /type PanelView = "home" \| "journey" \| "garden" \| "notes"/);
   assert.match(pageSource, /onClick=\{\(\) => openPanelView\("journey"\)\}/);
   assert.match(pageSource, /onClick=\{\(\) => openPanelView\("garden"\)\}/);
@@ -72,6 +75,7 @@ test("parent navigation and family settings are functional", async () => {
   assert.match(pageSource, /safe-garden-support-mode/);
   assert.match(pageSource, /"model-first"/);
   assert.match(pageSource, /records\.map\(\(record, index\)/);
+  assert.match(styles, /\.panel-nav\s*\{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/s);
 });
 
 test("the finished game loop includes exploration, physical actions, and garden placement", async () => {
