@@ -14,6 +14,14 @@ Keep screenshots of:
 2. The successful `npm test` output.
 3. The Cloud Studio deployment success and public preview address.
 
+## Exact CodeBuddy deployment prompt
+
+Paste this into CodeBuddy after opening the repository:
+
+> Prepare The Safe Garden for the CodeBuddy hackathon submission. Use Node.js 24 as declared by `.nvmrc` and `package.json`. Preserve the deterministic child-safety state machine, the constrained parent-facing AI boundary, and all existing artwork. Run `npm install`, `npm test`, `npm run lint`, `npx tsc --noEmit`, and `npm run build:vercel`. Fix only genuine failures. Then use the Cloud Studio deployment entrance to deploy this full-stack Next.js game and return the public temporary preview URL. Do not expose `DEEPSEEK_API_KEY`; the reviewed offline fallback must remain fully playable without it.
+
+The repository includes server routes at `/api/coach` and `/api/mcp`, so do not convert it into a static-only export. Cloud Studio should run the existing application with Node.js 24.
+
 ## Local and Cloud Studio configuration
 
 - Runtime: Node.js 22.13 or newer.
