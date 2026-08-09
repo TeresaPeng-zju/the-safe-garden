@@ -605,25 +605,25 @@ onVisitPuppy,
 
       <button
   type="button"
-        className={`world-hotspot petal-hotspot ${discovered.includes("petal") ? "is-found" : ""}`}
+        className={`world-hotspot item-hotspot petal-hotspot ${discovered.includes("petal") ? "is-found" : ""}`}
         onClick={() => handleDiscover("petal")}
       disabled={discovered.includes("petal")}
       aria-label={g.collectPetal}
-      ><Flower2 aria-hidden="true" /><span>{g.petal}</span></button>
+      ><img className="hotspot-art" src="/assets/explore-petal.webp" alt="" aria-hidden="true" /></button>
       <button
         type="button"
-        className={`world-hotspot stone-hotspot ${discovered.includes("stone") ? "is-found" : ""}`}
+        className={`world-hotspot item-hotspot stone-hotspot ${discovered.includes("stone") ? "is-found" : ""}`}
         onClick={() => handleDiscover("stone")}
         disabled={discovered.includes("stone")}
         aria-label={g.collectStone}
-      ><CircleDot aria-hidden="true" /><span>{g.stone}</span></button>
+      ><img className="hotspot-art" src="/assets/explore-stone.webp" alt="" aria-hidden="true" /></button>
       <button
     type="button"
-      className={`world-hotspot butterfly-hotspot ${butterflyOpen ? "is-watching" : ""}`}
+      className={`world-hotspot item-hotspot butterfly-hotspot ${butterflyOpen ? "is-watching" : ""}`}
     onClick={() => setButterflyOpen((open) => !open)}
         aria-label={g.watchButterfly}
         aria-pressed={butterflyOpen}
-      ><Sparkles aria-hidden="true" /><span>{g.butterfly}</span></button>
+      ><span className="hotspot-art butterfly-sprite" aria-hidden="true" /></button>
       {butterflyOpen && (
 <div className="butterfly-note" role="note">{g.butterflyRest}</div>
       )}

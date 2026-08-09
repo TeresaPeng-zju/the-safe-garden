@@ -93,20 +93,21 @@ test("length-violating agent output falls back to the reviewed template", () => 
 });
 
 test("the coach route keeps DeepSeek server-side with same-origin and no-store guards", async () => {
-  const routeSource = await import("node:fs/promises").then(({ readFile }) =>
-    readFile(new URL("../app/api/coach/route.ts", import.meta.url), "utf8"),
-  );
-  assert.match(routeSource, /process\.env\.DEEPSEEK_API_KEY/);
-  assert.doesNotMatch(routeSource, /NEXT_PUBLIC/);
-  assert.doesNotMatch(routeSource, /playerName|childName|address|phone/);
+  const { readFile } = await import("node:fs/promises");
+  const routeSource = await readFile(new URL("../app/api/coach/route.ts", import.meta.url), "utf8");
+  const agentSource = await readFile(new URL("../lib/coach-agent.ts", import.meta.url), "utf8");
+  const serverSource = `${routeSource}\n${agentSource}`;
+  assert.match(serverSource, /process\.env\.DEEPSEEK_API_KEY/);
+  assert.doesNotMatch(serverSource, /NEXT_PUBLIC/);
+  assert.doesNotMatch(serverSource, /playerName|childName|address|phone/);
   assert.match(routeSource, /isSameOriginRequest/);
   assert.match(routeSource, /no-store/);
   assert.match(routeSource, /MAX_COACH_BODY_BYTES/);
   assert.match(routeSource, /sanitizeCoachRequest/);
-  assert.match(routeSource, /isSafeCoachEnhancement/);
+  assert.match(serverSource, /isSafeCoachEnhancement/);
   assert.match(routeSource, /reviewed-template/);
   // The API key is only read on the server and never returned to the client.
-  assert.doesNotMatch(routeSource, /candidate:\s*apiKey|apiKey.*NextResponse/);
+  assert.doesNotMatch(serverSource, /candidate:\s*apiKey|apiKey.*NextResponse/);
 });
 
 test("the request sanitizer drops identifying data and keeps only whitelisted fields", () => {

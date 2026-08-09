@@ -88,14 +88,16 @@ test("the finished game loop includes exploration, physical actions, and garden 
 });
 
 test("DeepSeek is server-side, anonymous, constrained, and safely optional", async () => {
-  const [routeSource, envExample] = await Promise.all([
+  const [routeSource, agentSource, envExample] = await Promise.all([
     readFile(new URL("../app/api/coach/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/coach-agent.ts", import.meta.url), "utf8"),
     readFile(new URL("../.env.example", import.meta.url), "utf8"),
   ]);
-  assert.match(routeSource, /process\.env\.DEEPSEEK_API_KEY/);
-  assert.doesNotMatch(routeSource, /playerName|childName/);
+  const serverSource = `${routeSource}\n${agentSource}`;
+  assert.match(serverSource, /process\.env\.DEEPSEEK_API_KEY/);
+  assert.doesNotMatch(serverSource, /playerName|childName/);
   assert.match(routeSource, /reviewed-template/);
-  assert.match(routeSource, /isSafeCoachEnhancement/);
+  assert.match(serverSource, /isSafeCoachEnhancement/);
   assert.doesNotMatch(envExample, /NEXT_PUBLIC_DEEPSEEK/);
 });
 
@@ -104,8 +106,11 @@ test("garden plots preserve complete growth artwork", async () => {
   assert.match(styles, /\.garden-plot\s*\{[^}]*aspect-ratio:\s*1;/s);
   assert.match(styles, /\.garden-plot \.growth-stage\s*\{[^}]*height:\s*100%;/s);
   assert.doesNotMatch(styles, /\.garden-plot\s*\{[^}]*height:\s*108px;/s);
-  assert.match(styles, /\.garden-bed\s*\{[^}]*height:\s*108px;/s);
-  assert.match(styles, /\.garden-bed \.growth-stage\s*\{[^}]*height:\s*92px;/s);
+  assert.match(styles, /\.garden-bed\s*\{[^}]*height:\s*148px;/s);
+  assert.match(styles, /\.garden-bed \.growth-stage\s*\{[^}]*height:\s*132px;[^}]*background-size:\s*330% auto;[^}]*background-position-y:\s*43\.5%;/s);
+  assert.match(styles, /\.mini-growth\.stage-flower\s*\{[^}]*growth-flower\.webp[^}]*background-size:\s*contain;/s);
+  assert.match(styles, /\.history-growth\.stage-flower\s*\{[^}]*growth-flower\.webp[^}]*contain/s);
+  assert.match(styles, /\.garden-plot\.completed \.growth-stage\.stage-flower\s*\{[^}]*growth-flower\.webp[^}]*contain/s);
 });
 
 test("exploration labels avoid the fox and the bubble dog keeps one body scale", async () => {
@@ -118,6 +123,25 @@ test("exploration labels avoid the fox and the bubble dog keeps one body scale",
   assert.match(pageSource, /dog-bubble-sprite[^\n]*dog-bubble-still\.png/);
   assert.doesNotMatch(pageSource, /reducedMotion\s*\?\s*"\/assets\/dog-bubble-still\.png"\s*:\s*"\/assets\/dog-bubble\.webp"/);
   assert.match(styles, /@keyframes bubbleDrift/);
+  assert.match(styles, /\.quest-card\s*\{[^}]*top:\s*220px;/s);
+  assert.match(styles, /@media \(max-width:\s*760px\)[\s\S]*\.quest-card\s*\{[^}]*top:\s*158px;/s);
+});
+
+test("exploration objects use generated picture-book artwork instead of text pills", async () => {
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  for (const asset of ["explore-petal.webp", "explore-stone.webp"]) {
+    assert.match(pageSource, new RegExp(`/assets/${asset}`));
+  }
+  assert.match(styles, /\/assets\/explore-butterfly-frames\.webp/);
+  assert.match(styles, /\.world-hotspot\.item-hotspot\s*\{[^}]*background:\s*transparent;/s);
+  assert.match(styles, /\.hotspot-art\s*\{[^}]*object-fit:\s*contain;/s);
+  assert.doesNotMatch(pageSource, /<Flower2 aria-hidden="true" \/><span>\{g\.petal\}<\/span>/);
+  assert.doesNotMatch(pageSource, /<CircleDot aria-hidden="true" \/><span>\{g\.stone\}<\/span>/);
+  assert.match(styles, /\.butterfly-sprite\s*\{[^}]*background-size:\s*300% 100%;[^}]*animation:\s*butterflyWingFrames 2\.8s steps\(1, end\) infinite alternate;/s);
+  assert.match(styles, /@keyframes butterflyWingFrames/);
 });
 
 test("the help scene places the child beside the listening adult", async () => {

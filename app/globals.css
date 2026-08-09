@@ -521,12 +521,17 @@ button { color: inherit; }
   background-size: 400% auto;
   background-position-y: 49%;
 }
+.mini-growth.stage-flower {
+  background-image: url("/assets/growth-flower.webp");
+  background-position: center;
+  background-size: contain;
+}
 .mini-growth.bloomed { opacity: 1; animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); }
 .observation-card p { padding-right: 0; }
 .tonight-card blockquote { margin: 12px 0; padding: 15px; border: 0; border-radius: 17px; background: linear-gradient(135deg, #fff0c8, #f7dfaa); color: #60492f; font-family: Georgia, "Songti SC", serif; font-size: 14px; line-height: 1.45; }
 .coach-card .parent-reply { color: #7a6b57; font-size: 12px; }
 .coach-card .practice-record-count { margin-top: 10px; color: #8c795f; font-size: 10px; text-align: center; }
-.garden-bed { height: 108px; margin-top: 11px; padding: 8px 8px 7px; display: flex; align-items: flex-end; justify-content: space-around; border-radius: 18px; background: linear-gradient(180deg, #e9edcd 0 66%, #b98b56 67% 78%, #916640 79%); overflow: hidden; }
+.garden-bed { height: 148px; margin-top: 11px; padding: 8px 8px 7px; display: flex; align-items: flex-end; justify-content: space-around; border-radius: 18px; background: linear-gradient(180deg, #e9edcd 0 70%, #b98b56 71% 82%, #916640 83%); overflow: hidden; }
 .growth-stage {
   width: 25%;
   height: 76px;
@@ -561,7 +566,11 @@ button { color: inherit; }
   background-position-y: 49%;
 }
 .garden-bed .flower-grown { animation: flowerPop .7s cubic-bezier(.2,.9,.2,1.2); filter: none; }
-.garden-bed .growth-stage { height: 92px; }
+.garden-bed .growth-stage {
+  height: 132px;
+  background-size: 330% auto;
+  background-position-y: 43.5%;
+}
 .panel-disclaimer { margin: 0; text-align: center; color: #a28d73; font-size: 10px; }
 
 .panel-view,
@@ -613,6 +622,7 @@ button { color: inherit; }
 .garden-plot .growth-stage { width: 100%; height: 100%; flex: none; }
 .garden-plot.open { opacity: .45; filter: grayscale(.25); }
 .garden-plot.completed .growth-stage { animation: flowerPop .65s cubic-bezier(.2,.9,.2,1.15) both; }
+.garden-plot.completed .growth-stage.stage-flower { background: url("/assets/growth-flower.webp") center / contain no-repeat; }
 .garden-summary { display: grid; gap: 3px; padding: 13px 15px; border-radius: 17px; background: rgba(255,252,244,.78); text-align: center; }
 .garden-summary strong { font-size: 12px; }
 .garden-summary span { color: var(--muted); font-size: 10px; }
@@ -623,6 +633,7 @@ button { color: inherit; }
 .history-entry strong { font-family: Georgia, "Songti SC", serif; font-size: 15px; }
 .history-entry p { margin: 1px 0 0; color: #75614c; font-size: 10px; line-height: 1.45; }
 .history-growth { width: 58px; height: 58px; display: block; background: url("/assets/growth.png") 100% 49% / 400% auto no-repeat; }
+.history-growth.stage-flower { background: url("/assets/growth-flower.webp") center / contain no-repeat; }
 .history-date { display: flex; align-items: center; gap: 5px; color: #99846c; font-size: 9px; }
 .history-date svg { width: 12px; height: 12px; }
 .history-empty { min-height: 190px; display: grid; place-items: center; align-content: center; gap: 10px; padding: 20px; border: 1px dashed #d7c9af; border-radius: 21px; color: #94816a; text-align: center; }
@@ -663,7 +674,7 @@ button { color: inherit; }
 .exploration-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
 .quest-card {
   position: absolute;
-  top: 180px;
+  top: 220px;
   left: clamp(20px, 3vw, 38px);
   width: min(340px, 34vw);
   padding: 16px;
@@ -708,14 +719,41 @@ button { color: inherit; }
 .world-hotspot svg { width: 21px; height: 21px; padding: 3px; border-radius: 50%; background: #f4dfad; color: #b8772c; }
 .world-hotspot.is-found { opacity: .38; animation: none; }
 .world-hotspot:disabled { cursor: default; }
-.petal-hotspot { left: 38%; bottom: 29%; }
-.stone-hotspot { left: 43%; bottom: 49%; animation-delay: -.9s; }
+.world-hotspot.item-hotspot {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+}
+.hotspot-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 7px 7px rgba(91,64,41,.2));
+  transition: filter .2s ease;
+}
+.item-hotspot:hover:not(:disabled) .hotspot-art,
+.item-hotspot:focus-visible .hotspot-art { filter: drop-shadow(0 9px 10px rgba(91,64,41,.3)); }
+.item-hotspot:focus-visible { outline: 4px solid rgba(255,250,225,.92); outline-offset: 2px; }
+.petal-hotspot { left: 38%; bottom: 29%; width: 82px; height: 82px; }
+.stone-hotspot { left: 43%; bottom: 49%; width: 78px; height: 78px; animation-delay: -.9s; }
 .puppy-hotspot { left: 56%; bottom: 48%; animation-delay: -1.7s; }
 .puppy-hotspot:not(.is-ready) { opacity: .62; }
 .puppy-hotspot.is-ready { border-color: #f6e19f; box-shadow: 0 0 0 7px rgba(255,244,184,.23), 0 12px 30px rgba(91,64,41,.22); }
-.butterfly-hotspot { left: 70%; bottom: 55%; animation-delay: -2.2s; }
-.butterfly-hotspot.is-watching { border-color: #d6c1e6; box-shadow: 0 0 0 6px rgba(214,193,230,.28), 0 12px 30px rgba(91,64,41,.2); }
-.butterfly-hotspot svg { background: #efe2f6; color: #8a6bab; }
+.butterfly-hotspot { left: 70%; bottom: 55%; width: 96px; height: 96px; animation-delay: -2.2s; }
+.butterfly-hotspot.is-watching { background: radial-gradient(circle, rgba(246,237,190,.28), transparent 68%); box-shadow: 0 0 0 6px rgba(214,193,230,.24); }
+.butterfly-sprite {
+  background-image: url("/assets/explore-butterfly-frames.webp");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 300% 100%;
+  animation: butterflyWingFrames 2.8s steps(1, end) infinite alternate;
+}
 
 .quest-feedback { display: flex; align-items: center; gap: 6px; margin: 9px 0 0; padding: 7px 9px; border-radius: 11px; background: #e4ebcc; color: #5f7444; font-size: 10px; font-weight: 800; }
 .quest-feedback svg { flex: 0 0 14px; width: 14px; height: 14px; }
@@ -760,6 +798,10 @@ button { color: inherit; }
 
 .picture-support .world-hotspot { min-height: 52px; padding: 9px 14px; font-size: 12px; }
 .picture-support .world-hotspot svg { width: 27px; height: 27px; }
+.picture-support .world-hotspot.item-hotspot { min-height: 0; padding: 0; }
+.picture-support .petal-hotspot { width: 94px; height: 94px; }
+.picture-support .stone-hotspot { width: 90px; height: 90px; }
+.picture-support .butterfly-hotspot { width: 108px; height: 108px; }
 .picture-support .backpack-items span { font-size: 11px; }
 
 .hold-action { position: relative; overflow: hidden; user-select: none; touch-action: none; }
@@ -806,6 +848,11 @@ button { color: inherit; }
   0% { opacity: 0; transform: translate(0, 8px) scale(.72); }
   18%, 70% { opacity: .88; }
   100% { opacity: 0; transform: translate(15px, -30px) scale(1.08); }
+}
+@keyframes butterflyWingFrames {
+  0%, 32% { background-position: 0 0; }
+  33%, 65% { background-position: 50% 0; }
+  66%, 100% { background-position: 100% 0; }
 }
 @keyframes flowerPop { 0% { transform: scale(.35); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes characterBreathe { 0%, 100% { transform: translateY(0) rotate(-.4deg); } 50% { transform: translateY(-5px) rotate(.4deg); } }
@@ -872,10 +919,11 @@ button { color: inherit; }
   .quest-card > p { font-size: 10px; }
   .world-hotspot { min-height: 38px; padding: 6px 9px; font-size: 9px; }
   .world-hotspot svg { width: 19px; height: 19px; }
-  .petal-hotspot { left: 50%; bottom: 20%; }
-  .stone-hotspot { left: 47%; bottom: 48%; }
+  .world-hotspot.item-hotspot { min-height: 0; padding: 0; }
+  .petal-hotspot { left: 50%; bottom: 20%; width: 68px; height: 68px; }
+  .stone-hotspot { left: 47%; bottom: 48%; width: 66px; height: 66px; }
   .puppy-hotspot { left: auto; right: 7%; bottom: 39%; }
-  .butterfly-hotspot { left: auto; right: 9%; bottom: 58%; }
+  .butterfly-hotspot { left: auto; right: 9%; bottom: 58%; width: 80px; height: 80px; }
   .butterfly-note { left: 14px; right: 14px; bottom: 50%; width: auto; }
   .planting-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; }
   .planting-grid button { border-radius: 11px; }
