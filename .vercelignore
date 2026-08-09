@@ -2,7 +2,7 @@
 .next
 .vinext
 .wrangler
-assets
+/assets
 dist
 node_modules
 outputs

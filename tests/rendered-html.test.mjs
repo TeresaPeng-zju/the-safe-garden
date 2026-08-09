@@ -51,6 +51,12 @@ test("ships optimized game assets and social metadata", async () => {
   assert.ok(dog.size < 5_000_000, "dog sprite sheet should remain web-sized");
 });
 
+test("Vercel excludes source artwork without excluding public game assets", async () => {
+  const vercelIgnore = await readFile(new URL("../.vercelignore", import.meta.url), "utf8");
+  assert.match(vercelIgnore, /^\/assets$/m);
+  assert.doesNotMatch(vercelIgnore, /^assets$/m);
+});
+
 test("ships explicit browser and touch favicons", async () => {
   const layoutSource = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
   assert.match(layoutSource, /icons:\s*\{/);
