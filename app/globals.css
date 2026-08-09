@@ -90,6 +90,10 @@ button { color: inherit; }
 .dog-character.is-stepping { transform: translateX(64px); }
 .dog-character.is-approaching { transform: translateX(-76px); }
 .fox-character.is-leaving { transform: translateX(-98px); }
+.fox-character.is-seeking-help,
+.fox-character.is-supported { width: clamp(180px, 19vw, 260px); left: 49%; bottom: 12%; transform: none; }
+.dog-character.is-kept-back { left: 18%; bottom: 27%; transform: none; }
+.parent-character.is-near-fox { left: 70%; bottom: 20%; }
 .parent-character.is-arriving { animation: parentArrives .7s ease-out both; }
 
 .character-shadow {
@@ -122,6 +126,7 @@ button { color: inherit; }
 .fox-happy img { left: -100%; top: 0; }
 .fox-celebrate img { left: -200%; top: 0; }
 .fox-step img { left: -100%; top: -100%; }
+.fox-help img { left: -200%; top: -100%; }
 .dog-sprite img { top: -50%; }
 .dog-idle img { left: 0; }
 .dog-happy img { left: -100%; }
@@ -628,6 +633,10 @@ button { color: inherit; }
   .dog-character.is-stepping { transform: translateX(25px); }
   .dog-character.is-approaching { transform: translateX(-32px); }
   .fox-character.is-leaving { transform: translateX(-45px); }
+  .fox-character.is-seeking-help,
+  .fox-character.is-supported { width: clamp(155px, 34vw, 215px); left: 42%; bottom: 15%; transform: none; }
+  .dog-character.is-kept-back { left: 5%; bottom: 29%; transform: none; }
+  .parent-character.is-near-fox { left: 68%; bottom: 25%; }
   .journey-continue { width: 100%; margin-left: 0; }
   .welcome-card, .completion-card { border-radius: 28px; padding: 25px; }
   .welcome-overlay, .completion-overlay { padding: 14px; }

@@ -79,3 +79,15 @@ test("garden plots preserve complete growth artwork", async () => {
   assert.match(styles, /\.garden-plot \.growth-stage\s*\{[^}]*height:\s*100%;/s);
   assert.doesNotMatch(styles, /\.garden-plot\s*\{[^}]*height:\s*108px;/s);
 });
+
+test("the help scene places the child beside the listening adult", async () => {
+  const [pageSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(pageSource, /presentation === "fox-seek-help" \? "fox-help"/);
+  assert.match(pageSource, /node\.id === "seek-help"\s*\? "is-seeking-help"/s);
+  assert.match(pageSource, /isSupportedScene \? "is-kept-back"/);
+  assert.match(styles, /\.fox-help img \{ left: -200%; top: -100%; \}/);
+  assert.match(styles, /\.parent-character\.is-near-fox/);
+});

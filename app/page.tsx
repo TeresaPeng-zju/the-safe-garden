@@ -225,14 +225,23 @@ function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; red
     : node.action
       ? semanticPresentationMap[node.action]
       : undefined;
-  const foxPose = presentation === "fox-happy" ? "fox-happy" : presentation === "fox-step" ? "fox-step" : presentation === "fox-seek-help" ? "fox-happy" : "fox-idle";
+  const foxPose = presentation === "fox-happy" ? "fox-happy" : presentation === "fox-step" ? "fox-step" : presentation === "fox-seek-help" ? "fox-help" : "fox-idle";
   const dogPose = presentation === "dog-listen" ? "dog-listen" : "dog-idle";
   const usesDogActionSheet = presentation === "dog-boundary-step-back" || presentation === "dog-repair";
   const usesBubbleIdle = node.id === "ask-consent";
   const dogActionPose = presentation === "dog-boundary-step-back" ? "dog-action-back" : "dog-repair";
-  const foxClass = presentation === "fox-step" ? "is-stepping" : presentation === "fox-leave" || presentation === "fox-seek-help" ? "is-leaving" : "";
+  const isSupportedScene = ["seek-help", "repair", "trusted-adult-response"].includes(node.id);
+  const foxClass = presentation === "fox-step"
+    ? "is-stepping"
+    : presentation === "fox-leave"
+      ? "is-leaving"
+      : node.id === "seek-help"
+        ? "is-seeking-help"
+        : isSupportedScene
+          ? "is-supported"
+          : "";
   const showTrustedAdult = ["seek-help", "repair", "trusted-adult-response"].includes(node.id);
-  const dogClass = [presentation === "dog-approach" ? "is-approaching" : "", showTrustedAdult ? "is-with-adult" : ""].filter(Boolean).join(" ");
+  const dogClass = [presentation === "dog-approach" ? "is-approaching" : "", isSupportedScene ? "is-kept-back" : ""].filter(Boolean).join(" ");
   const parentPose = node.id === "repair" ? "parent-protect" : node.id === "trusted-adult-response" ? "parent-reassure" : "parent-listen";
 
   return (
@@ -252,7 +261,7 @@ function IllustratedCharacters({ node, reducedMotion }: { node: JourneyNode; red
         )}
       </div>
       {showTrustedAdult && (
-        <div className={`storybook-character parent-character ${node.id === "seek-help" ? "is-arriving" : ""}`}>
+        <div className={`storybook-character parent-character is-near-fox ${node.id === "seek-help" ? "is-arriving" : ""}`}>
           <span className="character-shadow" />
           <span className={`sprite-window parent-sprite ${parentPose}`}><img src="/assets/fox-parent.png" alt="" /></span>
         </div>
